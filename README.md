@@ -12,13 +12,17 @@
 
 ## Visual Previews
 
-### 1. Built Mobile Application in Landscape (926 × 428 Viewport)
+### 1. Cinematic Feature Preview (Generated via Google Flow)
+![OmniDeck Feature Still](assets/omnideck_promo_still.jpeg)
+> An 8-second cinematic product video rendered with **Veo 3.1 Fast** is available at [`assets/omnideck_promo.mp4`](assets/omnideck_promo.mp4).
+
+### 2. Built Mobile Application in Landscape (926 × 428 Viewport)
 ![OmniDeck Built Landscape App](app/preview_built.png)
 
-### 2. iPadOS Liquid Glass Stream Workspace
+### 3. iPadOS Liquid Glass Stream Workspace
 ![iPadOS Stream Workspace](omnitouch_ipados_stream_v2.png)
 
-### 3. iPadOS Control Center & Stage Manager App Library
+### 4. iPadOS Control Center & Stage Manager App Library
 ![iPadOS Control Center & App Library](omnitouch_control_center_v2.png)
 
 ---
