@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniTouch — iPadOS Phone-Friendly Remote PC Control Center & App Library</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', '"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"SF Mono"', '"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            apple: {
+              bg: '#07090e',
+              card: 'rgba(25, 29, 39, 0.65)',
+              cardHover: 'rgba(38, 44, 58, 0.75)',
+              border: 'rgba(255, 255, 255, 0.10)',
+              borderSubtle: 'rgba(255, 255, 255, 0.05)',
+              blue: '#0A84FF',
+              green: '#30D158',
+              orange: '#FF9F0A',
+              purple: '#BF5AF2',
+              red: '#FF453A',
+              teal: '#64D2FF'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #030407;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Plus Jakarta Sans", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+    .glass-surface {
+      background: rgba(22, 26, 36, 0.72);
+      backdrop-filter: blur(48px) saturate(180%);
+      -webkit-backdrop-filter: blur(48px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+    }
+    .glass-pill {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+    .glass-pill:hover {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+    .slider-capsule {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(30px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+    .ring-glow {
+      filter: drop-shadow(0 0 6px rgba(10, 132, 255, 0.5));
+    }
+    .custom-scroll::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+</head>
+<body class="p-4 sm:p-6 text-slate-100">
+
+  <div class="relative w-[960px] h-[460px] max-w-full rounded-[48px] p-3.5 bg-black/90 shadow-[0_25px_80px_rgba(0,0,0,0.9),0_0_0_2px_rgba(255,255,255,0.12)] border border-white/10 flex flex-col overflow-hidden">
+    
+    <div class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-16 rounded-full bg-neutral-900 border border-white/5 flex items-center justify-center opacity-60 z-50 pointer-events-none">
+      <div class="w-2.5 h-2.5 rounded-full bg-neutral-950 border border-cyan-500/20"></div>
+    </div>
+
+    <div class="relative w-full h-full rounded-[38px] bg-[#080a11] overflow-hidden flex flex-col p-3.5 pl-6 border border-white/10 shadow-inner">
+      
+      <div class="absolute -top-24 -left-20 w-80 h-80 rounded-full bg-blue-600/15 blur-[90px] pointer-events-none"></div>
+      <div class="absolute -bottom-24 right-10 w-96 h-96 rounded-full bg-emerald-500/10 blur-[100px] pointer-events-none"></div>
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-purple-600/10 blur-[120px] pointer-events-none"></div>
+
+      <header class="relative z-20 flex items-center justify-between h-10 px-2 mb-2 flex-shrink-0">
+        
+        <div class="flex items-center gap-2.5">
+          <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.07] border border-white/10 backdrop-blur-xl">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span class="text-xs font-bold tracking-wider text-white">TITAN-RIG</span>
+            <span class="text-[10px] text-white/50">|</span>
+            <span class="text-[10.5px] font-mono text-emerald-400 font-medium">Wi-Fi 6E</span>
+            <span class="text-[10px] text-white/30">•</span>
+            <span class="text-[10.5px] font-mono text-cyan-300 font-medium">2.1ms</span>
+            <span class="text-[10px] text-white/30">•</span>
+            <span class="text-[10.5px] font-mono text-emerald-400 font-semibold">120 FPS</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.06] border border-white/10 backdrop-blur-xl text-[11px] font-medium text-white/80 shadow-sm">
+          <span class="flex items-center gap-1.5 text-cyan-300">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="3" width="12" height="18" rx="6"/><path d="M12 7v4"/></svg>
+            <span class="text-white/90">Physical Mouse <span class="text-[9.5px] text-cyan-400 bg-cyan-500/10 px-1 py-0.2 rounded font-mono">Raw 1:1</span></span>
+          </span>
+          <span class="text-white/20">•</span>
+          <span class="flex items-center gap-1.5 text-emerald-400">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h.01M18 14h.01M10 14h4"/></svg>
+            <span class="text-white/90">Magic Keyboard Active</span>
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <div class="flex items-center rounded-full bg-white/[0.07] border border-white/10 p-0.5 backdrop-blur-xl">
+            <button class="px-2.5 py-1 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition text-[10.5px] font-medium flex items-center gap-1" title="Lock Workstation">
+              <svg class="w-3 h-3 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+              <span>Lock</span>
+            </button>
+            <button class="px-2.5 py-1 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition text-[10.5px] font-medium flex items-center gap-1" title="Put Host to Sleep">
+              <svg class="w-3 h-3 text-white/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+              <span>Sleep</span>
+            </button>
+          </div>
+
+          <button class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-semibold text-xs shadow-[0_4px_16px_rgba(10,132,255,0.4)] border border-white/20 active:scale-95 transition">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <span>Back to Stream</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="relative z-10 flex-1 grid grid-cols-12 gap-3 min-h-0">
+        
+        <section class="col-span-5 flex flex-col gap-2.5 h-full min-h-0">
+          
+          <div class="grid grid-cols-12 gap-2.5 flex-1 min-h-0">
+            
+            <div class="col-span-5 glass-surface rounded-3xl p-2.5 flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-1 px-1">
+                <span class="text-[10px] font-semibold tracking-wider uppercase text-white/50">Tactile Sliders</span>
+                <span class="text-[9.5px] font-mono text-cyan-400">Direct Bus</span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 flex-1 items-stretch py-0.5">
+                <div class="slider-capsule rounded-2xl p-1 flex flex-col items-center justify-end relative overflow-hidden group cursor-pointer">
+                  <div class="absolute bottom-0 inset-x-0 h-[75%] bg-white/20 group-hover:bg-white/25 rounded-xl transition-all duration-200">
+                    <div class="absolute top-1.5 inset-x-2 h-1 bg-white/40 rounded-full"></div>
+                  </div>
+                  <div class="relative z-10 flex flex-col items-center gap-1 pb-2">
+                    <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                    <span class="text-[11px] font-bold font-mono text-white">75%</span>
+                    <span class="text-[8.5px] uppercase font-semibold tracking-wider text-white/60">Volume</span>
+                  </div>
+                </div>
+
+                <div class="slider-capsule rounded-2xl p-1 flex flex-col items-center justify-end relative overflow-hidden group cursor-pointer">
+                  <div class="absolute bottom-0 inset-x-0 h-[85%] bg-amber-400/25 group-hover:bg-amber-400/30 rounded-xl transition-all duration-200">
+                    <div class="absolute top-1.5 inset-x-2 h-1 bg-amber-200/50 rounded-full"></div>
+                  </div>
+                  <div class="relative z-10 flex flex-col items-center gap-1 pb-2">
+                    <svg class="w-4 h-4 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                    <span class="text-[11px] font-bold font-mono text-amber-200">85%</span>
+                    <span class="text-[8.5px] uppercase font-semibold tracking-wider text-white/60">Rig HDR</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-span-7 glass-surface rounded-3xl p-3 flex flex-col justify-between">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-semibold tracking-wider uppercase text-white/50">Host Vital Signs</span>
+                <span class="text-[9.5px] text-emerald-400 font-medium flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Ryzen 7950X / RTX 4090
+                </span>
+              </div>
+
+              <div class="flex items-center gap-3 my-auto py-1">
+                <div class="relative w-20 h-20 flex-shrink-0 flex items-center justify-center">
+                  <svg class="w-20 h-20 -rotate-90 transform" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40" stroke="rgba(10,132,255,0.18)" stroke-width="7" fill="none"/>
+                    <circle cx="50" cy="50" r="30" stroke="rgba(48,209,88,0.18)" stroke-width="7" fill="none"/>
+                    <circle cx="50" cy="50" r="20" stroke="rgba(191,90,242,0.18)" stroke-width="7" fill="none"/>
+                    <circle cx="50" cy="50" r="40" stroke="#0A84FF" stroke-width="7" stroke-linecap="round" fill="none" stroke-dasharray="251.3" stroke-dashoffset="191" class="ring-glow"/>
+                    <circle cx="50" cy="50" r="30" stroke="#30D158" stroke-width="7" stroke-linecap="round" fill="none" stroke-dasharray="188.5" stroke-dashoffset="103"/>
+                    <circle cx="50" cy="50" r="20" stroke="#BF5AF2" stroke-width="7" stroke-linecap="round" fill="none" stroke-dasharray="125.6" stroke-dashoffset="62.8"/>
+                  </svg>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <svg class="w-3.5 h-3.5 text-white/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3"/></svg>
+                  </div>
+                </div>
+
+                <div class="flex-1 flex flex-col justify-center gap-1.5">
+                  <div class="flex items-center justify-between text-[10.5px]">
+                    <span class="flex items-center gap-1.5 font-medium text-white/80">
+                      <span class="w-2 h-2 rounded-full bg-blue-500"></span> CPU
+                    </span>
+                    <span class="font-mono text-blue-400 font-bold">24% <span class="text-white/40 font-normal">49°C</span></span>
+                  </div>
+                  <div class="flex items-center justify-between text-[10.5px]">
+                    <span class="flex items-center gap-1.5 font-medium text-white/80">
+                      <span class="w-2 h-2 rounded-full bg-emerald-500"></span> GPU
+                    </span>
+                    <span class="font-mono text-emerald-400 font-bold">45% <span class="text-white/40 font-normal">58°C</span></span>
+                  </div>
+                  <div class="flex items-center justify-between text-[10.5px]">
+                    <span class="flex items-center gap-1.5 font-medium text-white/80">
+                      <span class="w-2 h-2 rounded-full bg-purple-400"></span> RAM
+                    </span>
+                    <span class="font-mono text-purple-300 font-bold">32<span class="text-white/40 font-normal">/64GB</span></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between pt-1 border-t border-white/5 text-[9.5px] font-mono text-white/40">
+                <span>Power Draw: 285W</span>
+                <span class="text-emerald-400">NVENC 4:4:4 Active</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-surface rounded-3xl p-3 flex flex-col gap-2 flex-shrink-0">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-semibold uppercase tracking-wider text-white/50">Audio Routing</span>
+              <span class="text-[9.5px] text-cyan-400 font-mono">Opus 48kHz Low-Jitter</span>
+            </div>
+            <div class="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-black/40 border border-white/5">
+              <button class="flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-white/60 hover:text-white text-[11px] font-medium transition">
+                <svg class="w-3.5 h-3.5 text-white/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-9.33-5"/><path d="m14 14 6 6"/><path d="M17 17a6 6 0 1 0-8.5-8.5"/></svg>
+                <span>Studio Rig</span>
+              </button>
+              <button class="flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-blue-600/30 text-blue-300 border border-blue-500/40 font-semibold text-[11px] shadow-sm">
+                <svg class="w-3.5 h-3.5 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                <span>iPhone Audio</span>
+              </button>
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-cyan-300">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-[11px] font-semibold text-white">Single Window Focus</span>
+                  <span class="text-[9px] text-white/50">Auto-crops active app for phone screen</span>
+                </div>
+              </div>
+              <div class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border border-white/20 bg-emerald-500 p-0.5 transition-colors">
+                <span class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md translate-x-4 transition"></span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="col-span-7 glass-surface rounded-3xl p-3 flex flex-col justify-between h-full min-h-0">
+          
+          <div class="flex items-center justify-between gap-2 mb-2 flex-shrink-0">
+            <div class="flex items-center gap-1 bg-black/40 p-1 rounded-2xl border border-white/5">
+              <button class="px-2.5 py-1 rounded-xl bg-white/20 text-white font-semibold text-[10.5px] shadow-sm">All Apps</button>
+              <button class="px-2.5 py-1 rounded-xl text-white/60 hover:text-white text-[10.5px] font-medium transition">Dev</button>
+              <button class="px-2.5 py-1 rounded-xl text-white/60 hover:text-white text-[10.5px] font-medium transition">Gaming</button>
+              <button class="px-2.5 py-1 rounded-xl text-white/60 hover:text-white text-[10.5px] font-medium transition">Media</button>
+            </div>
+
+            <div class="flex-1 max-w-[210px] relative">
+              <input type="text" placeholder="Open app on TITAN-RIG..." class="w-full bg-white/[0.06] border border-white/10 rounded-xl py-1 pl-7 pr-3 text-[10.5px] text-white placeholder-white/35 focus:outline-none focus:border-blue-500/60 focus:bg-white/[0.1] transition">
+              <svg class="w-3.5 h-3.5 text-white/40 absolute left-2.5 top-1/2 -translate-y-1/2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-4 grid-rows-2 gap-2 flex-1 min-h-0 my-0.5">
+            
+            <div class="glass-pill rounded-2xl p-2 flex flex-col justify-between group hover:border-cyan-500/40 transition">
+              <div class="flex items-start justify-between">
+                <div class="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center shadow-md">
+                  <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                </div>
+                <span class="flex items-center gap-1 text-[8.5px] font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Active
+                </span>
+              </div>
+              <div>
+                <div class="text-[11.5px] font-semibold text-white truncate">VS Code</div>
+                <div class="text-[9px] text-white/45 truncate">pipeline_render.rs</div>
+              </div>
+              <button class="w-full py-1 rounded-lg bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 font-semibold text-[9.5px] border border-blue-500/30 active:scale-95 transition">
+                Focus on Phone
+              </button>
+            </div>
+
+            <div class="glass-pill rounded-2xl p-2 flex flex-col justify-between group hover:border-yellow-500/40 transition">
+              <div class="flex items-start justify-between">
+                <div class="w-7 h-7 rounded-xl bg-gradient-to-br from-amber-500 via-red-500 to-emerald-500 flex items-center justify-center shadow-md">
+                  <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
+                </div>
+                <span class="text-[8.5px] font-semibold text-white/60 bg-white/5 px-1.5 py-0.5 rounded-full border border-white/10">8 Tabs</span>
+              </div>
+              <div>
+                <div class="text-[11.5px] font-semibold text-white truncate">Chrome</div>
+                <div class="text-[9px] text-white/45 truncate">Documentation</div>
+              </div>
+              <button class="w-full py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white/90 font-medium text-[9.5px] active:scale-95 transition">
+                Focus on Phone
+              </button>
+            </div>
+
+            <div class="glass-pill rounded-2xl p-2 flex flex-col justify-between group hover:border-emerald-500/40 transition">
+              <div class="flex items-start justify-between">
+                <div class="w-7 h-7 rounded-xl bg-gradient-to-br from-neutral-800 to-neutral-900 border border-white/20 flex items-center justify-center shadow-md">
+                  <svg class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                </div>
+                <span class="flex items-center gap-1 text-[8.5px] font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> 2 Sessions
+                </span>
+              </div>
+              <div>
+                <div class="text-[11.5px] font-semibold text-white truncate">zsh Terminal</div>
+                <div class="text-[9px] text-white/45 font-mono truncate">cargo run --release</div>
+              </div>
+              <button class="w-full py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white/90 font-medium text-[9.5px] active:scale-95 transition">
+                Focus on Phone
+              </button>
+            </div>
+
+            <div class="glass-pill rounded-2xl p-2 flex flex-col justify-between group hover:border-orange-500/40 transition">
+              <div class="flex items-start justify-between">
+                <div class="w-7 h-7 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-md">
+                  <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2a10 10 0 1 0 10 10H12"/></svg>
+                </div>
+                <span class="text-[8.5px] font-semibold text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded-full border border-amber-500/20">OptiX 58°C</span>
+              </div>
+              <div>
+                <div class="text-[11.5px] font-semibold text-white truncate">Blender 4.2</div>
+                <div class="text-[9px] text-white/45 truncate">CyberDeck_v2.blend</div>
+              </div>
+              <button class="w-full py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white/90 font-medium text-[9.5px] active:scale-95 transition">
+                Focus on Phone
+              </button>
+            </div>
+
+            <div class="glass-pill rounded-2xl p-2 flex flex-col justify-between group hover:border-emerald-500/40 transition">
+              <div class="flex items-start justify-between">
+                <div class="w-7 h-7 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-md">
+                  <svg class="w-4 h-4 text-black" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.58 14.42c-.18.3-.56.4-.86.22-2.36-1.44-5.33-1.76-8.83-.96-.34.08-.68-.14-.76-.48-.08-.34.14-.68.48-.76 3.82-.88 7.12-.51 9.75 1.12.3.18.4.56.22.86zm1.22-2.72c-.23.37-.71.49-1.08.26-2.7-1.66-6.82-2.14-10.02-1.17-.41.13-.85-.11-.98-.53-.13-.41.11-.85.53-.98 3.65-1.11 8.21-.57 11.29 1.34.37.23.49.71.26 1.08zm.13-2.83C14.69 9.07 9.38 8.9 6.32 9.83c-.49.15-1.02-.13-1.17-.62-.15-.49.13-1.02.62-1.17 3.52-1.07 9.4-.87 13.15 1.35.44.26.59.83.33 1.28-.27.44-.84.59-1.32.2z"/></svg>
+                </div>
+                <span class="flex items-center gap-1 text-[8.5px] font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Playing
+                </span>
+              </div>
+              <div>
+                <div class="text-[11.5px] font-semibold text-white truncate">Spotify</div>
+                <div class="text-[9px] text-white/45 truncate">Daft Punk • Get Lucky</div>
+              </div>
+              <button class="w-full py-1 rounded-lg bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 font-semibold text-[9.5px] border border-blue-500/30 active:scale-95 transition">
+                Focus on Phone
+              </button>
+            </div>
+
+            <div class="glass-pill rounded-2xl p-2 flex flex-col justify-between group hover:border-blue-500/40 transition">
+              <div class="flex items-start justify-between">
+                <div class="w-7 h-7 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 border border-white/10 flex items-center justify-center shadow-md">
+                  <svg class="w-4 h-4 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 11h4M8 9v4M15 12h.01M18 10h.01"/><rect x="2" y="6" width="20" height="12" rx="4"/></svg>
+                </div>
+                <span class="text-[8.5px] font-semibold text-white/50 bg-white/5 px-1.5 py-0.5 rounded-full">Ready</span>
+              </div>
+              <div>
+                <div class="text-[11.5px] font-semibold text-white truncate">Steam</div>
+                <div class="text-[9px] text-white/45 truncate">Cyberpunk 2077 Ready</div>
+              </div>
+              <button class="w-full py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 font-semibold text-[9.5px] border border-emerald-500/30 active:scale-95 transition">
+                Launch
+              </button>
+            </div>
+
+            <div class="glass-pill rounded-2xl p-2 flex flex-col justify-between group hover:border-purple-500/40 transition">
+              <div class="flex items-start justify-between">
+                <div class="w-7 h-7 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md">
+                  <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+                </div>
+                <span class="flex items-center gap-1 text-[8.5px] font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Voice
+                </span>
+              </div>
+              <div>
+                <div class="text-[11.5px] font-semibold text-white truncate">Discord</div>
+                <div class="text-[9px] text-white/45 truncate">#dev-room (Connected)</div>
+              </div>
+              <button class="w-full py-1 rounded-lg bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 font-semibold text-[9.5px] border border-blue-500/30 active:scale-95 transition">
+                Focus on Phone
+              </button>
+            </div>
+
+            <div class="glass-pill rounded-2xl p-2 flex flex-col justify-between group hover:border-cyan-500/40 transition">
+              <div class="flex items-start justify-between">
+                <div class="w-7 h-7 rounded-xl bg-gradient-to-br from-cyan-600 to-blue-700 flex items-center justify-center shadow-md">
+                  <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h16a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2Z"/><path d="M4 10h4v4H4z"/><path d="M10 10h4v4h-4z"/><path d="M16 10h4v4h-4z"/><path d="M10 6h4v4h-4z"/></svg>
+                </div>
+                <span class="flex items-center gap-1 text-[8.5px] font-semibold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full border border-emerald-500/20">
+                  4 Active
+                </span>
+              </div>
+              <div>
+                <div class="text-[11.5px] font-semibold text-white truncate">Docker</div>
+                <div class="text-[9px] text-white/45 truncate">Postgres, Redis, Rust</div>
+              </div>
+              <button class="w-full py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white/90 font-medium text-[9.5px] active:scale-95 transition">
+                Manage Containers
+              </button>
+            </div>
+
+          </div>
+
+          <div class="mt-2 pt-2 border-t border-white/5 flex items-center justify-between flex-shrink-0">
+            <div class="flex items-center gap-2">
+              <span class="text-[9.5px] font-semibold uppercase tracking-wider text-white/40">Handheld Live Dock</span>
+              <span class="text-[9px] font-mono text-cyan-400 bg-cyan-500/10 px-1.5 py-0.5 rounded-full">5 Pins Bound</span>
+            </div>
+
+            <div class="flex items-center gap-1.5 px-3 py-1 rounded-2xl bg-white/[0.06] border border-white/10 backdrop-blur-xl">
+              <div class="relative flex flex-col items-center group cursor-pointer">
+                <div class="w-6 h-6 rounded-lg bg-blue-600/80 flex items-center justify-center text-white text-[10px] shadow-sm">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                </div>
+                <span class="w-1 h-1 rounded-full bg-cyan-400 mt-0.5"></span>
+              </div>
+
+              <div class="relative flex flex-col items-center group cursor-pointer">
+                <div class="w-6 h-6 rounded-lg bg-amber-500/80 flex items-center justify-center text-white text-[10px] shadow-sm">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
+                </div>
+                <span class="w-1 h-1 rounded-full bg-white/70 mt-0.5"></span>
+              </div>
+
+              <div class="relative flex flex-col items-center group cursor-pointer">
+                <div class="w-6 h-6 rounded-lg bg-emerald-600/80 flex items-center justify-center text-black text-[10px] shadow-sm">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+                </div>
+                <span class="w-1 h-1 rounded-full bg-emerald-400 mt-0.5"></span>
+              </div>
+
+              <div class="relative flex flex-col items-center group cursor-pointer">
+                <div class="w-6 h-6 rounded-lg bg-purple-600/80 flex items-center justify-center text-white text-[10px] shadow-sm">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                </div>
+                <span class="w-1 h-1 rounded-full bg-cyan-400 mt-0.5"></span>
+              </div>
+
+              <div class="relative flex flex-col items-center group cursor-pointer">
+                <div class="w-6 h-6 rounded-lg bg-neutral-800 border border-white/20 flex items-center justify-center text-emerald-400 text-[10px] shadow-sm">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/></svg>
+                </div>
+                <span class="w-1 h-1 rounded-full bg-white/40 mt-0.5"></span>
+              </div>
+
+              <div class="w-[1px] h-4 bg-white/10 mx-1"></div>
+
+              <button class="w-6 h-6 rounded-lg bg-white/5 hover:bg-white/15 border border-dashed border-white/20 flex items-center justify-center text-white/50 hover:text-white transition">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+            </div>
+
+            <div class="flex items-center gap-1.5 text-[9px] text-white/40">
+              <span>Swipe up for Host Desktop</span>
+            </div>
+          </div>
+
+        </section>
+
+      </main>
+
+      <div class="w-32 h-1 bg-white/25 rounded-full mx-auto mt-1 flex-shrink-0"></div>
+
+    </div>
+  </div>
+
+</body>
+</html>

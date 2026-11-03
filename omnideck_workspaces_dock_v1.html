@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OmniDeck OS - Workspace &amp; Dock Customizer</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration verbatim from Design System -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-tertiary-fixed-variant": "#653e00",
+            "outline-variant": "#3a494b",
+            "primary": "#e0fdff",
+            "on-secondary-fixed": "#001d34",
+            "on-primary": "#00373a",
+            "on-primary-fixed-variant": "#004f53",
+            "primary-fixed-dim": "#00dce6",
+            "on-secondary": "#003256",
+            "on-secondary-container": "#002c4b",
+            "primary-fixed": "#6ff6ff",
+            "on-surface": "#e2e2eb",
+            "on-error": "#690005",
+            "secondary": "#9bcbff",
+            "outline": "#849495",
+            "surface-tint": "#00dce6",
+            "surface-container-high": "#282a30",
+            "surface-container-lowest": "#0c0e14",
+            "inverse-surface": "#e2e2eb",
+            "secondary-fixed": "#d0e4ff",
+            "secondary-fixed-dim": "#9bcbff",
+            "error-container": "#93000a",
+            "on-primary-fixed": "#002022",
+            "inverse-on-surface": "#2e3037",
+            "on-tertiary": "#472a00",
+            "surface-dim": "#111319",
+            "tertiary-fixed": "#ffddb8",
+            "error": "#ffb4ab",
+            "surface-variant": "#33343b",
+            "on-tertiary-fixed": "#2a1700",
+            "on-tertiary-container": "#875400",
+            "on-background": "#e2e2eb",
+            "background": "#111319",
+            "tertiary-container": "#ffd3a1",
+            "surface-container-highest": "#33343b",
+            "inverse-primary": "#00696f",
+            "surface-bright": "#373940",
+            "tertiary-fixed-dim": "#ffb95f",
+            "surface-container": "#1e1f26",
+            "primary-container": "#00f2fe",
+            "tertiary": "#fff5ee",
+            "surface-container-low": "#191b22",
+            "surface": "#111319",
+            "secondary-container": "#3196e6",
+            "on-primary-container": "#006a70",
+            "on-surface-variant": "#b9cacb",
+            "on-secondary-fixed-variant": "#004a7a",
+            "on-error-container": "#ffdad6"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "margin-safe": "1.75rem",
+            "gutter-compact": "0.5rem",
+            "space-md": "0.75rem",
+            "margin": "1rem",
+            "space-sm": "0.5rem",
+            "space-lg": "1rem",
+            "gutter": "0.75rem",
+            "space-xl": "1.5rem",
+            "space-xs": "0.25rem"
+          },
+          "fontFamily": {
+            "display-hud-mobile": [
+              "JetBrains Mono"
+            ],
+            "control-action": [
+              "Plus Jakarta Sans"
+            ],
+            "label-telemetry": [
+              "JetBrains Mono"
+            ],
+            "headline-lg": [
+              "Plus Jakarta Sans"
+            ],
+            "body-strong": [
+              "Plus Jakarta Sans"
+            ],
+            "body-default": [
+              "Plus Jakarta Sans"
+            ],
+            "headline-md": [
+              "Plus Jakarta Sans"
+            ],
+            "display-hud": [
+              "JetBrains Mono"
+            ],
+            "headline-sm": [
+              "Plus Jakarta Sans"
+            ],
+            "label-micro": [
+              "JetBrains Mono"
+            ]
+          },
+          "fontSize": {
+            "display-hud-mobile": [
+              "26px",
+              {
+                "lineHeight": "30px",
+                "letterSpacing": "-0.03em",
+                "fontWeight": "700"
+              }
+            ],
+            "control-action": [
+              "12px",
+              {
+                "lineHeight": "14px",
+                "letterSpacing": "0.04em",
+                "fontWeight": "700"
+              }
+            ],
+            "label-telemetry": [
+              "12px",
+              {
+                "lineHeight": "16px",
+                "letterSpacing": "0.02em",
+                "fontWeight": "600"
+              }
+            ],
+            "headline-lg": [
+              "22px",
+              {
+                "lineHeight": "28px",
+                "letterSpacing": "-0.02em",
+                "fontWeight": "700"
+              }
+            ],
+            "body-strong": [
+              "13px",
+              {
+                "lineHeight": "18px",
+                "letterSpacing": "0em",
+                "fontWeight": "600"
+              }
+            ],
+            "body-default": [
+              "13px",
+              {
+                "lineHeight": "18px",
+                "letterSpacing": "0em",
+                "fontWeight": "400"
+              }
+            ],
+            "headline-md": [
+              "18px",
+              {
+                "lineHeight": "24px",
+                "letterSpacing": "-0.01em",
+                "fontWeight": "600"
+              }
+            ],
+            "display-hud": [
+              "32px",
+              {
+                "lineHeight": "36px",
+                "letterSpacing": "-0.04em",
+                "fontWeight": "700"
+              }
+            ],
+            "headline-sm": [
+              "15px",
+              {
+                "lineHeight": "20px",
+                "letterSpacing": "0em",
+                "fontWeight": "600"
+              }
+            ],
+            "label-micro": [
+              "10px",
+              {
+                "lineHeight": "12px",
+                "letterSpacing": "0.06em",
+                "fontWeight": "500"
+              }
+            ]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    /* Custom cyberdeck glows and tactile scrollbars */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(12, 14, 20, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #3a494b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #00f2fe;
+    }
+    
+    .glow-cyan-subtle {
+      box-shadow: 0 0 16px -2px rgba(0, 242, 254, 0.25);
+    }
+    .glow-cyan-active {
+      box-shadow: 0 0 20px -2px rgba(0, 242, 254, 0.4), inset 0 0 8px rgba(0, 242, 254, 0.2);
+    }
+    .specular-border {
+      border: 1px solid rgba(58, 73, 75, 0.5);
+      border-top-color: rgba(0, 242, 254, 0.3);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body-default text-body-default antialiased select-none overflow-hidden h-screen w-screen">
+<!-- ========================================================================= -->
+<!-- TOP NAV BAR (Shared Component: TopNavBar)                                  -->
+<!-- ========================================================================= -->
+<header class="fixed top-0 left-0 right-0 z-40 h-10 bg-surface-container-lowest/80 dark:bg-surface-container-lowest/80 backdrop-blur-xl border-b border-outline-variant/40 shadow-lg shadow-surface-container-lowest/50">
+<div class="flex justify-between items-center w-full px-margin-safe h-full">
+<!-- Left: Logo & Remote Identity -->
+<div class="flex items-center gap-space-md">
+<span class="text-headline-sm font-display-hud font-bold text-primary dark:text-primary tracking-wider flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary-container text-[18px]">sports_esports</span>
+          OmniDeck OS
+        </span>
+<div class="hidden sm:flex items-center gap-2 pl-3 border-l border-outline-variant/40">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary-container"></span>
+</span>
+<span class="font-label-telemetry text-label-telemetry text-primary-container">TITAN-RIG</span>
+<span class="font-label-micro text-label-micro text-on-surface-variant">3.2ms • 120 FPS</span>
+</div>
+</div>
+<!-- Center: Navigation Links (Active: HUD / Workspace) -->
+<nav class="flex items-center gap-6 h-full">
+<a class="text-primary font-bold border-b border-primary-container h-full flex items-center px-1 text-label-telemetry font-label-telemetry" href="#">HUD</a>
+<a class="text-on-surface-variant hover:text-primary hover:bg-surface-container-high/60 transition-colors duration-150 h-full flex items-center px-1 text-label-telemetry font-label-telemetry" href="#">Peripherals</a>
+<a class="text-on-surface-variant hover:text-primary hover:bg-surface-container-high/60 transition-colors duration-150 h-full flex items-center px-1 text-label-telemetry font-label-telemetry" href="#">Stream</a>
+</nav>
+<!-- Right: Peripherals & System Status -->
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center gap-1 text-on-surface-variant pr-2 border-r border-outline-variant/40">
+<button class="p-1 hover:text-primary transition-colors active:scale-95" title="Wifi Status">
+<span class="material-symbols-outlined text-[16px]">wifi</span>
+</button>
+<button class="p-1 text-primary-container transition-colors active:scale-95" title="Gamepad Connected">
+<span class="material-symbols-outlined text-[16px]">sports_esports</span>
+</button>
+<button class="p-1 hover:text-primary transition-colors active:scale-95" title="Keyboard Linked">
+<span class="material-symbols-outlined text-[16px]">keyboard</span>
+</button>
+<button class="p-1 hover:text-primary transition-colors active:scale-95" title="Mouse Linked">
+<span class="material-symbols-outlined text-[16px]">mouse</span>
+</button>
+</div>
+<button class="bg-primary-container text-on-primary-container px-2.5 py-1 rounded-lg font-control-action text-control-action font-bold active:scale-95 transition-transform flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">link</span>
+          Connect
+        </button>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1 active:scale-95" title="Power Menu">
+<span class="material-symbols-outlined text-[18px]">settings_power</span>
+</button>
+</div>
+</div>
+</header>
+<!-- ========================================================================= -->
+<!-- SIDE NAV BAR (Shared Component: SideNavBar)                                -->
+<!-- ========================================================================= -->
+<aside class="fixed left-4 top-14 bottom-14 z-50 rounded-xl bg-surface-container-low/85 dark:bg-surface-container-low/85 backdrop-blur-2xl border border-outline-variant/60 shadow-2xl shadow-surface-container-lowest flex flex-col justify-between items-center w-24 py-space-md h-[calc(100vh-7rem)]">
+<!-- Rig Badge Header -->
+<div class="flex flex-col items-center gap-1 text-center w-full px-1">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high border border-primary-container/40 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-[18px]">memory</span>
+</div>
+<span class="text-headline-sm font-display-hud text-primary dark:text-primary text-[11px] leading-3 truncate w-full">TITAN-RIG</span>
+<span class="font-label-micro text-label-micro text-primary-container/80 text-[9px] uppercase tracking-wider">ONLINE 3.2ms</span>
+</div>
+<!-- Navigation Tabs (Controls is active workspace builder) -->
+<div class="flex flex-col gap-2 w-full px-2">
+<!-- Tab 1: Controls (Active) -->
+<button class="flex flex-col items-center justify-center bg-primary-container/20 text-primary-container border border-primary-container/40 rounded-lg p-2 shadow-sm w-full active:translate-y-px transition-all">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">videogame_asset</span>
+<span class="font-control-action text-control-action text-[10px] mt-1">Controls</span>
+</button>
+<!-- Tab 2: Profiles -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant p-2 w-full hover:bg-surface-variant/50 hover:text-primary-fixed transition-all rounded-lg active:translate-y-px">
+<span class="material-symbols-outlined text-[20px]">layers</span>
+<span class="font-control-action text-control-action text-[10px] mt-1">Profiles</span>
+</button>
+<!-- Tab 3: Telemetry -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant p-2 w-full hover:bg-surface-variant/50 hover:text-primary-fixed transition-all rounded-lg active:translate-y-px">
+<span class="material-symbols-outlined text-[20px]">speed</span>
+<span class="font-control-action text-control-action text-[10px] mt-1">Telemetry</span>
+</button>
+<!-- Tab 4: Display -->
+<button class="flex flex-col items-center justify-center text-on-surface-variant p-2 w-full hover:bg-surface-variant/50 hover:text-primary-fixed transition-all rounded-lg active:translate-y-px">
+<span class="material-symbols-outlined text-[20px]">monitor</span>
+<span class="font-control-action text-control-action text-[10px] mt-1">Display</span>
+</button>
+</div>
+<!-- Footer Controls -->
+<div class="flex flex-col items-center gap-1.5 w-full px-2 pt-2 border-t border-outline-variant/30">
+<button class="text-on-surface-variant hover:text-primary-container transition-colors flex flex-col items-center p-1 w-full">
+<span class="material-symbols-outlined text-[18px]">volume_up</span>
+<span class="font-label-micro text-label-micro text-[9px]">Audio</span>
+</button>
+<button class="text-on-surface-variant hover:text-error transition-colors flex flex-col items-center p-1 w-full">
+<span class="material-symbols-outlined text-[18px]">power_settings_new</span>
+<span class="font-label-micro text-label-micro text-[9px]">Power</span>
+</button>
+</div>
+</aside>
+<!-- ========================================================================= -->
+<!-- MAIN WORKSPACE & DOCK CUSTOMIZER CANVAS                                  -->
+<!-- ========================================================================= -->
+<main class="ml-[7.5rem] mt-10 h-[calc(100vh-2.5rem)] flex overflow-hidden">
+<!-- 1. LEFT SUB-PANEL: Saved Workspaces & Dock Presets (~255px) -->
+<section class="w-[260px] flex-shrink-0 h-full bg-surface-container-low/85 backdrop-blur-2xl border-r border-outline-variant/40 flex flex-col justify-between p-space-md z-30">
+<!-- Top Title & Action -->
+<div class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary-container text-[18px]">space_dashboard</span>
+<h2 class="font-headline-sm text-headline-sm text-primary font-bold">Workspaces</h2>
+</div>
+<button class="px-2 py-1 rounded bg-primary-container/20 hover:bg-primary-container/30 text-primary-container border border-primary-container/40 font-control-action text-control-action text-[11px] flex items-center gap-1 glow-cyan-subtle active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[14px]">add</span>
+            New Dock
+          </button>
+</div>
+<!-- Presets List -->
+<div class="flex flex-col gap-2 overflow-y-auto max-h-[calc(100vh-17rem)] pr-0.5">
+<!-- Preset 1: Coding & DevOps (Active) -->
+<div class="p-2.5 rounded-xl bg-surface-container-high/90 border border-primary-container/60 glow-cyan-subtle relative overflow-hidden transition-all cursor-pointer">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary-container"></div>
+<div class="flex items-start justify-between mb-1 pl-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary-container text-[16px]">terminal</span>
+<span class="font-body-strong text-body-strong text-primary">Coding &amp; DevOps</span>
+</div>
+<span class="font-label-micro text-label-micro bg-primary-container/20 text-primary-container px-1.5 py-0.5 rounded border border-primary-container/30">Active</span>
+</div>
+<p class="font-label-telemetry text-label-telemetry text-on-surface-variant text-[11px] pl-1">6 apps • 3 binds</p>
+<div class="flex items-center gap-1.5 mt-2 pl-1">
+<button class="px-2 py-0.5 bg-primary-container text-on-primary-container rounded font-control-action text-control-action text-[10px] font-bold">Apply</button>
+<button class="px-2 py-0.5 bg-surface-variant hover:text-primary text-on-surface-variant rounded font-control-action text-control-action text-[10px]">Edit</button>
+<button class="p-0.5 hover:text-error text-outline transition-colors ml-auto">
+<span class="material-symbols-outlined text-[15px]">delete</span>
+</button>
+</div>
+</div>
+<!-- Preset 2: Gaming & Stream -->
+<div class="p-2.5 rounded-xl bg-surface-container/60 hover:bg-surface-container-high/60 border border-outline-variant/40 transition-all cursor-pointer group">
+<div class="flex items-start justify-between mb-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-secondary text-[16px]">sports_esports</span>
+<span class="font-body-strong text-body-strong text-on-surface group-hover:text-primary">Gaming &amp; Stream</span>
+</div>
+<span class="font-label-micro text-label-micro bg-tertiary-fixed-dim/20 text-tertiary-fixed-dim px-1.5 py-0.5 rounded border border-tertiary-fixed-dim/40">High Perf</span>
+</div>
+<p class="font-label-telemetry text-label-telemetry text-on-surface-variant text-[11px]">8 games • GPU boost</p>
+<div class="flex items-center gap-1.5 mt-2">
+<button class="px-2 py-0.5 bg-surface-variant hover:bg-primary-container/20 hover:text-primary-container text-on-surface-variant rounded font-control-action text-control-action text-[10px]">Load</button>
+<button class="px-2 py-0.5 bg-surface-variant hover:text-primary text-on-surface-variant rounded font-control-action text-control-action text-[10px]">Edit</button>
+</div>
+</div>
+<!-- Preset 3: Cinema & Couch Media -->
+<div class="p-2.5 rounded-xl bg-surface-container/60 hover:bg-surface-container-high/60 border border-outline-variant/40 transition-all cursor-pointer group">
+<div class="flex items-start justify-between mb-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary text-[16px]">movie</span>
+<span class="font-body-strong text-body-strong text-on-surface group-hover:text-primary">Cinema &amp; Couch</span>
+</div>
+</div>
+<p class="font-label-telemetry text-label-telemetry text-on-surface-variant text-[11px]">Plex, Netflix, Spotify</p>
+<div class="flex items-center gap-1.5 mt-2">
+<button class="px-2 py-0.5 bg-surface-variant hover:bg-primary-container/20 hover:text-primary-container text-on-surface-variant rounded font-control-action text-control-action text-[10px]">Load</button>
+</div>
+</div>
+<!-- Preset 4: 3D & Creative Studio -->
+<div class="p-2.5 rounded-xl bg-surface-container/60 hover:bg-surface-container-high/60 border border-outline-variant/40 transition-all cursor-pointer group">
+<div class="flex items-start justify-between mb-1">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary text-[16px]">palette</span>
+<span class="font-body-strong text-body-strong text-on-surface group-hover:text-primary">3D &amp; Creative</span>
+</div>
+</div>
+<p class="font-label-telemetry text-label-telemetry text-on-surface-variant text-[11px]">Blender, DaVinci, PS</p>
+<div class="flex items-center gap-1.5 mt-2">
+<button class="px-2 py-0.5 bg-surface-variant hover:bg-primary-container/20 hover:text-primary-container text-on-surface-variant rounded font-control-action text-control-action text-[10px]">Load</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Hardware Selector Card -->
+<div class="p-2.5 rounded-xl bg-surface-container-lowest/80 border border-outline-variant/60 specular-border flex flex-col gap-2">
+<div class="flex items-start justify-between gap-2">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary-container text-[16px]">cable</span>
+<span class="font-label-telemetry text-label-telemetry text-on-surface text-[11px] leading-tight">Auto-switch dock on Peripheral hook</span>
+</div>
+<!-- Toggle active -->
+<button class="w-8 h-4.5 bg-primary-container rounded-full p-0.5 flex items-center justify-end shadow-sm">
+<span class="w-3.5 h-3.5 bg-on-primary-container rounded-full"></span>
+</button>
+</div>
+<p class="font-label-micro text-label-micro text-on-surface-variant text-[10px]">Switches layout when BT Keyboard or Mouse connects.</p>
+</div>
+</section>
+<!-- 2. CENTER & RIGHT WORKSPACE: Application Library & Live Touch Grid -->
+<div class="flex-1 flex flex-col justify-between overflow-hidden relative pb-28">
+<!-- Top App Library Header Bar -->
+<div class="p-4 pb-2 border-b border-outline-variant/30 flex flex-col gap-3 bg-surface-container-lowest/40 backdrop-blur-md">
+<!-- Search and Telemetry Sync Indicator -->
+<div class="flex items-center justify-between gap-4">
+<!-- Search input -->
+<div class="relative flex-1 max-w-lg">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[18px]">search</span>
+<input class="w-full bg-surface-container-low/90 border border-outline-variant/60 rounded-xl pl-9 pr-14 py-2 font-body-default text-body-default text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container transition-all" placeholder="Search 42 apps installed on TITAN-RIG..." type="text"/>
+<div class="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1 font-label-micro text-label-micro text-outline bg-surface-variant px-1.5 py-0.5 rounded border border-outline-variant/50">
+<span>⌘</span><span>F</span>
+</div>
+</div>
+<!-- Remote Sync Telemetry Chip -->
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high/60 border border-outline-variant/50">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-container opacity-60"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-primary-container"></span>
+</span>
+<span class="font-label-telemetry text-label-telemetry text-on-surface text-[11px]">Synced with TITAN-RIG (2m ago)</span>
+<button class="hover:text-primary-container text-on-surface-variant transition-colors flex items-center" title="Refresh Host Catalog">
+<span class="material-symbols-outlined text-[15px]">refresh</span>
+</button>
+</div>
+</div>
+<!-- Filter Chips Row -->
+<div class="flex items-center gap-2 overflow-x-auto pb-1">
+<button class="px-3 py-1 rounded-full bg-primary-container text-on-primary-container font-control-action text-control-action text-[11px] font-bold shadow-sm whitespace-nowrap">
+            All Apps
+          </button>
+<button class="px-3 py-1 rounded-full bg-surface-container-high/70 hover:bg-surface-variant text-on-surface font-control-action text-control-action text-[11px] border border-outline-variant/40 whitespace-nowrap">
+            Development
+          </button>
+<button class="px-3 py-1 rounded-full bg-surface-container-high/70 hover:bg-surface-variant text-on-surface font-control-action text-control-action text-[11px] border border-outline-variant/40 whitespace-nowrap">
+            Creative
+          </button>
+<button class="px-3 py-1 rounded-full bg-surface-container-high/70 hover:bg-surface-variant text-on-surface font-control-action text-control-action text-[11px] border border-outline-variant/40 whitespace-nowrap">
+            Gaming
+          </button>
+<button class="px-3 py-1 rounded-full bg-surface-container-high/70 hover:bg-surface-variant text-on-surface font-control-action text-control-action text-[11px] border border-outline-variant/40 whitespace-nowrap">
+            System &amp; Tools
+          </button>
+<button class="px-3 py-1 rounded-full bg-surface-container-high/70 hover:bg-surface-variant text-on-surface font-control-action text-control-action text-[11px] border border-outline-variant/40 whitespace-nowrap">
+            Web Shortcuts
+          </button>
+<span class="text-on-surface-variant text-label-micro font-label-micro ml-auto pl-2">42 Items</span>
+</div>
+</div>
+<!-- Tactile App Card Grid (4 cols x 3 rows scrollable / responsive) -->
+<div class="flex-1 overflow-y-auto p-4 pr-6 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 content-start">
+<!-- Card 1: VS Code -->
+<div class="p-3 rounded-2xl bg-surface-container/70 border border-outline-variant/50 hover:border-primary-container/60 hover:bg-surface-container-high/80 transition-all duration-200 group flex flex-col justify-between h-[126px] specular-border relative">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-10 h-10 rounded-xl bg-secondary-container/20 border border-secondary-container/50 flex items-center justify-center text-primary-fixed shadow-inner">
+<span class="material-symbols-outlined text-[24px]">code</span>
+</div>
+<div>
+<h3 class="font-body-strong text-body-strong text-primary group-hover:text-primary-container transition-colors">VS Code</h3>
+<span class="font-label-micro text-label-micro text-on-surface-variant bg-surface-variant/60 px-1.5 py-0.2 rounded">Dev</span>
+</div>
+</div>
+<span class="flex items-center gap-1 font-label-micro text-label-micro text-primary-container bg-primary-container/10 px-1.5 py-0.5 rounded border border-primary-container/30">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span>
+              Active
+            </span>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-outline-variant/20">
+<button class="px-2.5 py-1 rounded-lg bg-surface-container-high group-hover:bg-primary-container/20 group-hover:text-primary-container text-on-surface font-control-action text-control-action text-[11px] border border-outline-variant/40 flex items-center gap-1 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[13px]">add_to_queue</span>
+              + Add to Dock
+            </button>
+<button class="w-8 h-8 rounded-lg bg-surface-variant hover:bg-primary-container hover:text-on-primary-container flex items-center justify-center text-on-surface transition-all active:scale-90" title="Launch Application">
+<span class="material-symbols-outlined text-[16px]">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Card 2: Google Chrome -->
+<div class="p-3 rounded-2xl bg-surface-container/70 border border-outline-variant/50 hover:border-primary-container/60 hover:bg-surface-container-high/80 transition-all duration-200 group flex flex-col justify-between h-[126px] specular-border relative">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-10 h-10 rounded-xl bg-tertiary-container/20 border border-tertiary-fixed-dim/40 flex items-center justify-center text-tertiary-fixed-dim shadow-inner">
+<span class="material-symbols-outlined text-[24px]">public</span>
+</div>
+<div>
+<h3 class="font-body-strong text-body-strong text-primary group-hover:text-primary-container transition-colors">Google Chrome</h3>
+<span class="font-label-micro text-label-micro text-on-surface-variant bg-surface-variant/60 px-1.5 py-0.2 rounded">Web</span>
+</div>
+</div>
+<span class="flex items-center gap-1 font-label-micro text-label-micro text-primary-container bg-primary-container/10 px-1.5 py-0.5 rounded border border-primary-container/30">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span>
+              Active
+            </span>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-outline-variant/20">
+<button class="px-2.5 py-1 rounded-lg bg-surface-container-high group-hover:bg-primary-container/20 group-hover:text-primary-container text-on-surface font-control-action text-control-action text-[11px] border border-outline-variant/40 flex items-center gap-1 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[13px]">add_to_queue</span>
+              + Add to Dock
+            </button>
+<button class="w-8 h-8 rounded-lg bg-surface-variant hover:bg-primary-container hover:text-on-primary-container flex items-center justify-center text-on-surface transition-all active:scale-90" title="Launch Application">
+<span class="material-symbols-outlined text-[16px]">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Card 3: zsh Terminal -->
+<div class="p-3 rounded-2xl bg-surface-container/70 border border-outline-variant/50 hover:border-primary-container/60 hover:bg-surface-container-high/80 transition-all duration-200 group flex flex-col justify-between h-[126px] specular-border relative">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-10 h-10 rounded-xl bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary shadow-inner">
+<span class="material-symbols-outlined text-[24px]">terminal</span>
+</div>
+<div>
+<h3 class="font-body-strong text-body-strong text-primary group-hover:text-primary-container transition-colors">zsh Terminal</h3>
+<span class="font-label-micro text-label-micro text-on-surface-variant bg-surface-variant/60 px-1.5 py-0.2 rounded">System</span>
+</div>
+</div>
+<span class="flex items-center gap-1 font-label-micro text-label-micro text-primary-container bg-primary-container/10 px-1.5 py-0.5 rounded border border-primary-container/30">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span>
+              Active
+            </span>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-outline-variant/20">
+<button class="px-2.5 py-1 rounded-lg bg-surface-container-high group-hover:bg-primary-container/20 group-hover:text-primary-container text-on-surface font-control-action text-control-action text-[11px] border border-outline-variant/40 flex items-center gap-1 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[13px]">add_to_queue</span>
+              + Add to Dock
+            </button>
+<button class="w-8 h-8 rounded-lg bg-surface-variant hover:bg-primary-container hover:text-on-primary-container flex items-center justify-center text-on-surface transition-all active:scale-90" title="Launch Application">
+<span class="material-symbols-outlined text-[16px]">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Card 4: Blender 4.2 -->
+<div class="p-3 rounded-2xl bg-surface-container/70 border border-outline-variant/50 hover:border-primary-container/60 hover:bg-surface-container-high/80 transition-all duration-200 group flex flex-col justify-between h-[126px] specular-border relative">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-10 h-10 rounded-xl bg-tertiary-fixed-dim/20 border border-tertiary-fixed-dim/50 flex items-center justify-center text-tertiary-fixed shadow-inner">
+<span class="material-symbols-outlined text-[24px]">view_in_ar</span>
+</div>
+<div>
+<h3 class="font-body-strong text-body-strong text-primary group-hover:text-primary-container transition-colors">Blender 4.2</h3>
+<span class="font-label-micro text-label-micro text-on-surface-variant bg-surface-variant/60 px-1.5 py-0.2 rounded">3D Studio</span>
+</div>
+</div>
+<span class="font-label-micro text-label-micro text-on-surface-variant bg-surface-container-lowest px-1.5 py-0.5 rounded border border-outline-variant/30">
+              Idle
+            </span>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-outline-variant/20">
+<button class="px-2.5 py-1 rounded-lg bg-surface-container-high group-hover:bg-primary-container/20 group-hover:text-primary-container text-on-surface font-control-action text-control-action text-[11px] border border-outline-variant/40 flex items-center gap-1 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[13px]">add_to_queue</span>
+              + Add to Dock
+            </button>
+<button class="w-8 h-8 rounded-lg bg-surface-variant hover:bg-primary-container hover:text-on-primary-container flex items-center justify-center text-on-surface transition-all active:scale-90" title="Launch Application">
+<span class="material-symbols-outlined text-[16px]">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Card 5: Discord -->
+<div class="p-3 rounded-2xl bg-surface-container/70 border border-outline-variant/50 hover:border-primary-container/60 hover:bg-surface-container-high/80 transition-all duration-200 group flex flex-col justify-between h-[126px] specular-border relative">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-10 h-10 rounded-xl bg-secondary-container/30 border border-secondary/40 flex items-center justify-center text-secondary shadow-inner">
+<span class="material-symbols-outlined text-[24px]">forum</span>
+</div>
+<div>
+<h3 class="font-body-strong text-body-strong text-primary group-hover:text-primary-container transition-colors">Discord</h3>
+<span class="font-label-micro text-label-micro text-on-surface-variant bg-surface-variant/60 px-1.5 py-0.2 rounded">Comms</span>
+</div>
+</div>
+<span class="flex items-center gap-1 font-label-micro text-label-micro text-primary-container bg-primary-container/10 px-1.5 py-0.5 rounded border border-primary-container/30">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span>
+              Active
+            </span>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-outline-variant/20">
+<button class="px-2.5 py-1 rounded-lg bg-surface-container-high group-hover:bg-primary-container/20 group-hover:text-primary-container text-on-surface font-control-action text-control-action text-[11px] border border-outline-variant/40 flex items-center gap-1 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[13px]">add_to_queue</span>
+              + Add to Dock
+            </button>
+<button class="w-8 h-8 rounded-lg bg-surface-variant hover:bg-primary-container hover:text-on-primary-container flex items-center justify-center text-on-surface transition-all active:scale-90" title="Launch Application">
+<span class="material-symbols-outlined text-[16px]">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Card 6: Steam -->
+<div class="p-3 rounded-2xl bg-surface-container/70 border border-outline-variant/50 hover:border-primary-container/60 hover:bg-surface-container-high/80 transition-all duration-200 group flex flex-col justify-between h-[126px] specular-border relative">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-10 h-10 rounded-xl bg-surface-container-highest border border-outline-variant flex items-center justify-center text-primary-fixed shadow-inner">
+<span class="material-symbols-outlined text-[24px]">sports_esports</span>
+</div>
+<div>
+<h3 class="font-body-strong text-body-strong text-primary group-hover:text-primary-container transition-colors">Steam</h3>
+<span class="font-label-micro text-label-micro text-on-surface-variant bg-surface-variant/60 px-1.5 py-0.2 rounded">Gaming</span>
+</div>
+</div>
+<span class="font-label-micro text-label-micro text-on-surface-variant bg-surface-container-lowest px-1.5 py-0.5 rounded border border-outline-variant/30">
+              Idle
+            </span>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-outline-variant/20">
+<button class="px-2.5 py-1 rounded-lg bg-surface-container-high group-hover:bg-primary-container/20 group-hover:text-primary-container text-on-surface font-control-action text-control-action text-[11px] border border-outline-variant/40 flex items-center gap-1 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[13px]">add_to_queue</span>
+              + Add to Dock
+            </button>
+<button class="w-8 h-8 rounded-lg bg-surface-variant hover:bg-primary-container hover:text-on-primary-container flex items-center justify-center text-on-surface transition-all active:scale-90" title="Launch Application">
+<span class="material-symbols-outlined text-[16px]">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Card 7: Spotify -->
+<div class="p-3 rounded-2xl bg-surface-container/70 border border-outline-variant/50 hover:border-primary-container/60 hover:bg-surface-container-high/80 transition-all duration-200 group flex flex-col justify-between h-[126px] specular-border relative">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-10 h-10 rounded-xl bg-primary-container/20 border border-primary-container/50 flex items-center justify-center text-primary-container shadow-inner">
+<span class="material-symbols-outlined text-[24px]">music_note</span>
+</div>
+<div>
+<h3 class="font-body-strong text-body-strong text-primary group-hover:text-primary-container transition-colors">Spotify</h3>
+<span class="font-label-micro text-label-micro text-on-surface-variant bg-surface-variant/60 px-1.5 py-0.2 rounded">Audio</span>
+</div>
+</div>
+<span class="flex items-center gap-1 font-label-micro text-label-micro text-primary-container bg-primary-container/10 px-1.5 py-0.5 rounded border border-primary-container/30">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span>
+              Active
+            </span>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-outline-variant/20">
+<button class="px-2.5 py-1 rounded-lg bg-surface-container-high group-hover:bg-primary-container/20 group-hover:text-primary-container text-on-surface font-control-action text-control-action text-[11px] border border-outline-variant/40 flex items-center gap-1 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[13px]">add_to_queue</span>
+              + Add to Dock
+            </button>
+<button class="w-8 h-8 rounded-lg bg-surface-variant hover:bg-primary-container hover:text-on-primary-container flex items-center justify-center text-on-surface transition-all active:scale-90" title="Launch Application">
+<span class="material-symbols-outlined text-[16px]">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Card 8: Docker Desktop -->
+<div class="p-3 rounded-2xl bg-surface-container/70 border border-outline-variant/50 hover:border-primary-container/60 hover:bg-surface-container-high/80 transition-all duration-200 group flex flex-col justify-between h-[126px] specular-border relative">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-10 h-10 rounded-xl bg-secondary-container/20 border border-secondary-container/50 flex items-center justify-center text-secondary shadow-inner">
+<span class="material-symbols-outlined text-[24px]">deployed_code</span>
+</div>
+<div>
+<h3 class="font-body-strong text-body-strong text-primary group-hover:text-primary-container transition-colors">Docker</h3>
+<span class="font-label-micro text-label-micro text-on-surface-variant bg-surface-variant/60 px-1.5 py-0.2 rounded">Infra</span>
+</div>
+</div>
+<span class="flex items-center gap-1 font-label-micro text-label-micro text-primary-container bg-primary-container/10 px-1.5 py-0.5 rounded border border-primary-container/30">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse"></span>
+              Active
+            </span>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-outline-variant/20">
+<button class="px-2.5 py-1 rounded-lg bg-surface-container-high group-hover:bg-primary-container/20 group-hover:text-primary-container text-on-surface font-control-action text-control-action text-[11px] border border-outline-variant/40 flex items-center gap-1 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[13px]">add_to_queue</span>
+              + Add to Dock
+            </button>
+<button class="w-8 h-8 rounded-lg bg-surface-variant hover:bg-primary-container hover:text-on-primary-container flex items-center justify-center text-on-surface transition-all active:scale-90" title="Launch Application">
+<span class="material-symbols-outlined text-[16px]">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Card 9: Figma -->
+<div class="p-3 rounded-2xl bg-surface-container/70 border border-outline-variant/50 hover:border-primary-container/60 hover:bg-surface-container-high/80 transition-all duration-200 group flex flex-col justify-between h-[126px] specular-border relative">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-10 h-10 rounded-xl bg-tertiary-container/30 border border-tertiary-fixed-dim/40 flex items-center justify-center text-tertiary-fixed shadow-inner">
+<span class="material-symbols-outlined text-[24px]">brush</span>
+</div>
+<div>
+<h3 class="font-body-strong text-body-strong text-primary group-hover:text-primary-container transition-colors">Figma</h3>
+<span class="font-label-micro text-label-micro text-on-surface-variant bg-surface-variant/60 px-1.5 py-0.2 rounded">Design</span>
+</div>
+</div>
+<span class="font-label-micro text-label-micro text-on-surface-variant bg-surface-container-lowest px-1.5 py-0.5 rounded border border-outline-variant/30">
+              Idle
+            </span>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-outline-variant/20">
+<button class="px-2.5 py-1 rounded-lg bg-surface-container-high group-hover:bg-primary-container/20 group-hover:text-primary-container text-on-surface font-control-action text-control-action text-[11px] border border-outline-variant/40 flex items-center gap-1 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[13px]">add_to_queue</span>
+              + Add to Dock
+            </button>
+<button class="w-8 h-8 rounded-lg bg-surface-variant hover:bg-primary-container hover:text-on-primary-container flex items-center justify-center text-on-surface transition-all active:scale-90" title="Launch Application">
+<span class="material-symbols-outlined text-[16px]">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Card 10: VLC Media Player -->
+<div class="p-3 rounded-2xl bg-surface-container/70 border border-outline-variant/50 hover:border-primary-container/60 hover:bg-surface-container-high/80 transition-all duration-200 group flex flex-col justify-between h-[126px] specular-border relative">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-10 h-10 rounded-xl bg-tertiary-fixed-dim/20 border border-tertiary-fixed-dim/40 flex items-center justify-center text-tertiary-fixed shadow-inner">
+<span class="material-symbols-outlined text-[24px]">movie</span>
+</div>
+<div>
+<h3 class="font-body-strong text-body-strong text-primary group-hover:text-primary-container transition-colors">VLC Player</h3>
+<span class="font-label-micro text-label-micro text-on-surface-variant bg-surface-variant/60 px-1.5 py-0.2 rounded">Media</span>
+</div>
+</div>
+<span class="font-label-micro text-label-micro text-on-surface-variant bg-surface-container-lowest px-1.5 py-0.5 rounded border border-outline-variant/30">
+              Idle
+            </span>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-outline-variant/20">
+<button class="px-2.5 py-1 rounded-lg bg-surface-container-high group-hover:bg-primary-container/20 group-hover:text-primary-container text-on-surface font-control-action text-control-action text-[11px] border border-outline-variant/40 flex items-center gap-1 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[13px]">add_to_queue</span>
+              + Add to Dock
+            </button>
+<button class="w-8 h-8 rounded-lg bg-surface-variant hover:bg-primary-container hover:text-on-primary-container flex items-center justify-center text-on-surface transition-all active:scale-90" title="Launch Application">
+<span class="material-symbols-outlined text-[16px]">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Card 11: Obsidian -->
+<div class="p-3 rounded-2xl bg-surface-container/70 border border-outline-variant/50 hover:border-primary-container/60 hover:bg-surface-container-high/80 transition-all duration-200 group flex flex-col justify-between h-[126px] specular-border relative">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-10 h-10 rounded-xl bg-secondary-container/20 border border-secondary-container/50 flex items-center justify-center text-secondary-fixed shadow-inner">
+<span class="material-symbols-outlined text-[24px]">note_alt</span>
+</div>
+<div>
+<h3 class="font-body-strong text-body-strong text-primary group-hover:text-primary-container transition-colors">Obsidian</h3>
+<span class="font-label-micro text-label-micro text-on-surface-variant bg-surface-variant/60 px-1.5 py-0.2 rounded">Notes</span>
+</div>
+</div>
+<span class="font-label-micro text-label-micro text-on-surface-variant bg-surface-container-lowest px-1.5 py-0.5 rounded border border-outline-variant/30">
+              Idle
+            </span>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-outline-variant/20">
+<button class="px-2.5 py-1 rounded-lg bg-surface-container-high group-hover:bg-primary-container/20 group-hover:text-primary-container text-on-surface font-control-action text-control-action text-[11px] border border-outline-variant/40 flex items-center gap-1 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[13px]">add_to_queue</span>
+              + Add to Dock
+            </button>
+<button class="w-8 h-8 rounded-lg bg-surface-variant hover:bg-primary-container hover:text-on-primary-container flex items-center justify-center text-on-surface transition-all active:scale-90" title="Launch Application">
+<span class="material-symbols-outlined text-[16px]">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Card 12: DaVinci Resolve -->
+<div class="p-3 rounded-2xl bg-surface-container/70 border border-outline-variant/50 hover:border-primary-container/60 hover:bg-surface-container-high/80 transition-all duration-200 group flex flex-col justify-between h-[126px] specular-border relative">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-10 h-10 rounded-xl bg-error-container/20 border border-error/40 flex items-center justify-center text-error shadow-inner">
+<span class="material-symbols-outlined text-[24px]">video_settings</span>
+</div>
+<div>
+<h3 class="font-body-strong text-body-strong text-primary group-hover:text-primary-container transition-colors">DaVinci Resolve</h3>
+<span class="font-label-micro text-label-micro text-on-surface-variant bg-surface-variant/60 px-1.5 py-0.2 rounded">Post</span>
+</div>
+</div>
+<span class="font-label-micro text-label-micro text-on-surface-variant bg-surface-container-lowest px-1.5 py-0.5 rounded border border-outline-variant/30">
+              Idle
+            </span>
+</div>
+<div class="flex items-center justify-between pt-2 border-t border-outline-variant/20">
+<button class="px-2.5 py-1 rounded-lg bg-surface-container-high group-hover:bg-primary-container/20 group-hover:text-primary-container text-on-surface font-control-action text-control-action text-[11px] border border-outline-variant/40 flex items-center gap-1 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[13px]">add_to_queue</span>
+              + Add to Dock
+            </button>
+<button class="w-8 h-8 rounded-lg bg-surface-variant hover:bg-primary-container hover:text-on-primary-container flex items-center justify-center text-on-surface transition-all active:scale-90" title="Launch Application">
+<span class="material-symbols-outlined text-[16px]">play_arrow</span>
+</button>
+</div>
+</div>
+</div>
+<!-- ===================================================================== -->
+<!-- 3. BOTTOM DOCK PREVIEW & BUILDER TRAY (Handheld Live Dock Canvas)     -->
+<!-- ===================================================================== -->
+<section class="absolute bottom-2 left-4 right-4 z-40 bg-surface-container-low/90 backdrop-blur-2xl rounded-2xl border border-primary-container/40 p-2.5 px-4 shadow-2xl glow-cyan-subtle flex flex-col md:flex-row items-center justify-between gap-3">
+<!-- Dock Info & Slot Metric -->
+<div class="flex items-center gap-3">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary-container text-[16px]">dock_to_bottom</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold text-[13px]">Handheld Live Dock</span>
+</div>
+<span class="font-label-telemetry text-label-telemetry text-primary-container text-[11px]">
+              7 / 10 Dock Slots Occupied
+            </span>
+</div>
+<!-- Drag drop removal target -->
+<div class="hidden lg:flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-dashed border-outline-variant/80 bg-surface-container-lowest/60 text-outline hover:text-error hover:border-error transition-colors text-[11px] font-label-micro">
+<span class="material-symbols-outlined text-[16px]">delete_sweep</span>
+<span>Drop here to unpin</span>
+</div>
+</div>
+<!-- The Slot Array (Live Dock Array) -->
+<div class="flex items-center gap-1.5 p-1 rounded-xl bg-surface-container-lowest/80 border border-outline-variant/40">
+<!-- Slot 1: VS Code -->
+<div class="group relative w-10 h-10 rounded-lg bg-surface-container-high border border-primary-container/60 flex items-center justify-center text-primary-container hover:scale-105 active:scale-95 transition-all cursor-grab" title="VS Code">
+<span class="material-symbols-outlined text-[20px]">code</span>
+<span class="absolute -bottom-0.5 w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<button class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-error-container text-white opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] transition-opacity">×</button>
+</div>
+<!-- Slot 2: Chrome -->
+<div class="group relative w-10 h-10 rounded-lg bg-surface-container-high border border-outline-variant/70 flex items-center justify-center text-tertiary-fixed hover:scale-105 active:scale-95 transition-all cursor-grab" title="Chrome">
+<span class="material-symbols-outlined text-[20px]">public</span>
+<span class="absolute -bottom-0.5 w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<button class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-error-container text-white opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] transition-opacity">×</button>
+</div>
+<!-- Slot 3: Terminal -->
+<div class="group relative w-10 h-10 rounded-lg bg-surface-container-high border border-outline-variant/70 flex items-center justify-center text-primary hover:scale-105 active:scale-95 transition-all cursor-grab" title="Terminal">
+<span class="material-symbols-outlined text-[20px]">terminal</span>
+<span class="absolute -bottom-0.5 w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<button class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-error-container text-white opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] transition-opacity">×</button>
+</div>
+<!-- Slot 4: Blender -->
+<div class="group relative w-10 h-10 rounded-lg bg-surface-container-high border border-outline-variant/70 flex items-center justify-center text-tertiary-fixed-dim hover:scale-105 active:scale-95 transition-all cursor-grab" title="Blender">
+<span class="material-symbols-outlined text-[20px]">view_in_ar</span>
+<button class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-error-container text-white opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] transition-opacity">×</button>
+</div>
+<!-- Slot 5: Spotify -->
+<div class="group relative w-10 h-10 rounded-lg bg-surface-container-high border border-outline-variant/70 flex items-center justify-center text-primary-container hover:scale-105 active:scale-95 transition-all cursor-grab" title="Spotify">
+<span class="material-symbols-outlined text-[20px]">music_note</span>
+<span class="absolute -bottom-0.5 w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<button class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-error-container text-white opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] transition-opacity">×</button>
+</div>
+<!-- Slot 6: Steam -->
+<div class="group relative w-10 h-10 rounded-lg bg-surface-container-high border border-outline-variant/70 flex items-center justify-center text-primary-fixed hover:scale-105 active:scale-95 transition-all cursor-grab" title="Steam">
+<span class="material-symbols-outlined text-[20px]">sports_esports</span>
+<button class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-error-container text-white opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] transition-opacity">×</button>
+</div>
+<!-- Slot 7: Discord -->
+<div class="group relative w-10 h-10 rounded-lg bg-surface-container-high border border-outline-variant/70 flex items-center justify-center text-secondary hover:scale-105 active:scale-95 transition-all cursor-grab" title="Discord">
+<span class="material-symbols-outlined text-[20px]">forum</span>
+<span class="absolute -bottom-0.5 w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<button class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-error-container text-white opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] transition-opacity">×</button>
+</div>
+<!-- Slot 8 (Empty) -->
+<div class="w-10 h-10 rounded-lg border border-dashed border-outline-variant/60 flex items-center justify-center text-outline hover:border-primary-container hover:text-primary-container transition-colors cursor-pointer" title="Empty Slot">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</div>
+<!-- Slot 9 (Empty) -->
+<div class="w-10 h-10 rounded-lg border border-dashed border-outline-variant/60 flex items-center justify-center text-outline hover:border-primary-container hover:text-primary-container transition-colors cursor-pointer" title="Empty Slot">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</div>
+<!-- Slot 10 (Empty) -->
+<div class="w-10 h-10 rounded-lg border border-dashed border-outline-variant/60 flex items-center justify-center text-outline hover:border-primary-container hover:text-primary-container transition-colors cursor-pointer" title="Empty Slot">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</div>
+</div>
+<!-- Action Triggers -->
+<div class="flex items-center gap-2">
+<button class="px-2.5 py-1.5 rounded-xl bg-surface-variant hover:bg-surface-container-high text-on-surface-variant hover:text-primary font-control-action text-control-action text-[11px] transition-colors">
+            Reset Defaults
+          </button>
+<button class="px-3 py-1.5 rounded-xl bg-surface-container-high hover:bg-surface-bright text-primary border border-outline-variant/60 font-control-action text-control-action text-[11px] flex items-center gap-1 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[14px]">cast</span>
+            Test on Stream
+          </button>
+<button class="px-4 py-1.5 rounded-xl bg-primary-container text-on-primary-container font-control-action text-control-action text-[12px] font-bold glow-cyan-active active:scale-95 transition-all flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+            Save Changes
+          </button>
+</div>
+</section>
+</div>
+</main>
+</body></html>

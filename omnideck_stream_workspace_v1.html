@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>OmniDeck Remote Stream &amp; Touch Interaction Workspace</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "primary": "#e0fdff",
+            "background": "#111319",
+            "outline": "#849495",
+            "error": "#ffb4ab",
+            "tertiary-fixed-dim": "#ffb95f",
+            "on-secondary-fixed": "#001d34",
+            "error-container": "#93000a",
+            "on-secondary-container": "#002c4b",
+            "on-primary-fixed": "#002022",
+            "surface-tint": "#00dce6",
+            "on-primary-container": "#006a70",
+            "on-tertiary-fixed-variant": "#653e00",
+            "inverse-primary": "#00696f",
+            "on-secondary-fixed-variant": "#004a7a",
+            "surface-container-low": "#191b22",
+            "surface-container-lowest": "#0c0e14",
+            "on-background": "#e2e2eb",
+            "tertiary": "#fff5ee",
+            "surface-container-high": "#282a30",
+            "inverse-on-surface": "#2e3037",
+            "on-tertiary-fixed": "#2a1700",
+            "surface-container": "#1e1f26",
+            "secondary-fixed-dim": "#9bcbff",
+            "secondary-fixed": "#d0e4ff",
+            "on-surface-variant": "#b9cacb",
+            "surface-variant": "#33343b",
+            "surface-bright": "#373940",
+            "surface-container-highest": "#33343b",
+            "on-primary": "#00373a",
+            "surface": "#111319",
+            "outline-variant": "#3a494b",
+            "primary-fixed-dim": "#00dce6",
+            "on-tertiary": "#472a00",
+            "on-secondary": "#003256",
+            "tertiary-fixed": "#ffddb8",
+            "on-error": "#690005",
+            "on-primary-fixed-variant": "#004f53",
+            "on-error-container": "#ffdad6",
+            "tertiary-container": "#ffd3a1",
+            "on-surface": "#e2e2eb",
+            "secondary": "#9bcbff",
+            "on-tertiary-container": "#875400",
+            "primary-container": "#00f2fe",
+            "surface-dim": "#111319",
+            "inverse-surface": "#e2e2eb",
+            "secondary-container": "#3196e6",
+            "primary-fixed": "#6ff6ff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "margin": "1rem",
+            "space-xl": "1.5rem",
+            "space-xs": "0.25rem",
+            "space-sm": "0.5rem",
+            "space-lg": "1rem",
+            "gutter": "0.75rem",
+            "space-md": "0.75rem",
+            "margin-safe": "1.75rem",
+            "gutter-compact": "0.5rem"
+          },
+          "fontFamily": {
+            "display-hud": ["JetBrains Mono"],
+            "control-action": ["Plus Jakarta Sans"],
+            "label-micro": ["JetBrains Mono"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "body-strong": ["Plus Jakarta Sans"],
+            "display-hud-mobile": ["JetBrains Mono"],
+            "body-default": ["Plus Jakarta Sans"],
+            "label-telemetry": ["JetBrains Mono"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "display-hud": ["32px", { "lineHeight": "36px", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+            "control-action": ["12px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }],
+            "label-micro": ["10px", { "lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "500" }],
+            "headline-sm": ["15px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "600" }],
+            "body-strong": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "600" }],
+            "display-hud-mobile": ["26px", { "lineHeight": "30px", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+            "body-default": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "label-telemetry": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "headline-lg": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .glow-cyan-active {
+      box-shadow: 0 0 18px -2px rgba(0, 242, 254, 0.4), inset 0 0 10px rgba(0, 242, 254, 0.2);
+    }
+    .thumb-pulse {
+      animation: pulse-ring 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes pulse-ring {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.9); }
+    }
+    .screen-vignette {
+      box-shadow: inset 0 0 60px rgba(12, 14, 20, 0.85);
+    }
+  </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface antialiased overflow-hidden select-none m-0 p-0 w-screen h-screen">
+<div class="relative w-full h-full bg-surface-container-lowest flex items-center justify-center overflow-hidden">
+<div class="relative w-full h-full max-w-[100vw] max-h-[1024px] bg-surface-container-lowest flex flex-col justify-between overflow-hidden screen-vignette border-x-8 border-surface-container-lowest/90">
+<div class="absolute inset-0 z-0 bg-surface-container-lowest overflow-hidden">
+<div class="w-full h-full flex flex-col font-display-hud text-label-micro">
+<div class="h-7 bg-surface-container-low/95 border-b border-outline-variant/30 flex items-center justify-between px-3 text-on-surface-variant">
+<div class="flex items-center space-x-2">
+<span class="w-2.5 h-2.5 rounded-full bg-error/80 inline-block"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim/80 inline-block"></span>
+<span class="w-2.5 h-2.5 rounded-full bg-primary-fixed-dim/80 inline-block"></span>
+<span class="font-body-default text-label-micro text-on-surface-variant/80 ml-2">Visual Studio Code — workspace/omni-mesh/stream_client.rs</span>
+</div>
+<div class="flex items-center space-x-4 font-label-micro text-on-surface-variant/60">
+<span class="hidden sm:inline">NVENC-HEVC 4:4:4</span>
+<span>HOST: TITAN-RIG (10.0.0.42)</span>
+</div>
+</div>
+<div class="flex-1 grid grid-cols-12 overflow-hidden bg-background">
+<div class="col-span-1 bg-surface-container-lowest/80 border-r border-outline-variant/20 p-2 hidden md:flex flex-col space-y-3 items-center text-on-surface-variant">
+<span class="material-symbols-outlined text-sm text-primary-container" data-icon="folder">folder</span>
+<span class="material-symbols-outlined text-sm" data-icon="search">search</span>
+<span class="material-symbols-outlined text-sm" data-icon="terminal">terminal</span>
+<span class="material-symbols-outlined text-sm" data-icon="memory">memory</span>
+</div>
+<div class="col-span-12 md:col-span-7 bg-surface-container-lowest/40 p-4 font-display-hud text-label-micro leading-5 text-on-surface overflow-hidden">
+<div class="flex items-center space-x-3 mb-2 text-on-surface-variant/70 border-b border-outline-variant/20 pb-1">
+<span class="text-primary-container font-semibold">stream_client.rs</span>
+<span>telemetry_bridge.h</span>
+<span>render_pipeline.cu</span>
+</div>
+<pre class="font-display-hud text-label-micro text-on-surface leading-snug"><span class="text-secondary">use</span> vulkano::pipeline::GraphicsPipeline;
+<span class="text-secondary">use</span> tokio::sync::mpsc::{channel, Receiver};
+
+<span class="text-on-surface-variant/50">// Low latency zero-copy frame loop (NVENC hardware decode)</span>
+<span class="text-secondary">pub async fn</span> <span class="text-primary-container">init_ultra_stream</span>(config: StreamConfig) -&gt; Result&lt;FramePipe&gt; {
+    <span class="text-secondary">let</span> (<span class="text-tertiary-fixed-dim">tx</span>, <span class="text-tertiary-fixed-dim">mut rx</span>) = channel::&lt;H265Packet&gt;(<span class="text-primary-fixed">128</span>);
+    <span class="text-secondary">let</span> pipeline = VulkanDescriptor::builder()
+        .enable_hdr10(<span class="text-primary-container">true</span>)
+        .target_framerate(<span class="text-primary-fixed">144.0</span>)
+        .max_jitter_buffer_us(<span class="text-primary-fixed">800</span>)
+        .build()?;
+
+    <span class="text-on-surface-variant/50">// Precision touch calibration: Raw HID injected into hypervisor</span>
+    tokio::spawn(<span class="text-secondary">async move</span> {
+        pipeline.dispatch_subsecond_events(InputMode::AbsoluteTouch).<span class="text-secondary">await</span>;
+    });
+
+    <span class="text-primary-fixed-dim">Ok</span>(FramePipe::new(tx))
+}</pre>
+</div>
+<div class="hidden md:flex md:col-span-4 bg-surface-container-lowest/90 border-l border-outline-variant/30 flex-col p-3 font-display-hud text-label-micro">
+<div class="flex items-center justify-between text-on-surface-variant/80 border-b border-outline-variant/20 pb-1 mb-2">
+<span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span> zsh (dev-cluster)</span>
+<span class="text-primary-container font-semibold">144 FPS SYNC</span>
+</div>
+<div class="text-on-surface-variant space-y-1">
+<p class="text-secondary-fixed">➜ omni-mesh git:(main) cargo run --release --features=nvenc</p>
+<p class="text-on-surface/80">[INFO] RTX 4090: D3D12 device active. Frame clock: 6.94ms</p>
+<p class="text-on-surface/80">[INFO] Audio buffer: 48kHz / 2ch PCM (Opus low-delay 96kbps)</p>
+<p class="text-primary-container">[STREAM] Bound to 0.0.0.0:47998 (UDP Direct Holepunch)</p>
+<p class="text-primary-fixed-dim">[INPUT] Virtual HID initialized. Touch polling @ 1000Hz</p>
+<p class="text-on-surface/60 animate-pulse">_</p>
+</div>
+</div>
+</div>
+<div class="h-6 bg-surface-container-low border-t border-outline-variant/20 px-3 flex items-center justify-between text-label-micro text-on-surface-variant/70">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-xs text-primary" data-icon="grid_view">grid_view</span>
+<span>Host: Ryzen 9 7950X3D • 64GB DDR5</span>
+</div>
+<div class="flex items-center space-x-3">
+<span>ENG US</span>
+<span>100% 🔋</span>
+<span>10:42 PM</span>
+</div>
+</div>
+</div>
+<div class="absolute left-[48%] top-[42%] pointer-events-none transition-transform duration-75 ease-out flex items-start">
+<svg class="w-6 h-6 filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 3L17 14.5L11 15L9 21L4 3Z" fill="#00F2FE" stroke="#0C0E14" stroke-linejoin="round" stroke-width="1.5"></path>
+</svg>
+<span class="ml-1 bg-surface-container-lowest/90 border border-primary-container/40 rounded px-1.5 py-0.5 text-primary-container font-label-micro text-[9px] backdrop-blur-md">
+            Raw 1:1
+          </span>
+</div>
+<div class="absolute top-12 left-20 z-10 hidden sm:flex items-center space-x-2 bg-surface-container-lowest/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-outline-variant/50 text-label-micro text-on-surface">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container thumb-pulse"></span>
+<span class="font-bold text-primary">144Hz</span>
+<span class="text-outline">|</span>
+<span class="text-secondary-fixed">HDR 10</span>
+<span class="text-outline">|</span>
+<span class="font-semibold text-primary-container">2.4ms</span>
+<span class="text-outline">|</span>
+<span class="text-on-surface-variant/70">NVENC HEVC</span>
+</div>
+</div>
+<header class="relative z-30 w-full pt-2 px-margin-safe flex items-center justify-between">
+<div class="flex items-center space-x-2">
+<div class="w-2 h-2 rounded-full bg-surface-variant mr-1 hidden md:block"></div>
+<div class="flex items-center bg-surface-container-lowest/85 backdrop-blur-2xl border border-outline-variant/60 rounded-full h-9 px-3 shadow-lg shadow-surface-container-lowest/50">
+<span class="w-2 h-2 rounded-full bg-primary-container thumb-pulse mr-2"></span>
+<span class="font-display-hud text-label-telemetry text-primary font-bold tracking-tight">TITAN-RIG</span>
+<span class="mx-2 text-outline-variant">/</span>
+<span class="font-label-telemetry text-label-micro text-primary-container">144Hz HDR • 2.4ms</span>
+<button class="ml-2.5 flex items-center space-x-1 pl-2 border-l border-outline-variant/50 text-on-surface hover:text-primary transition-colors text-label-micro font-control-action">
+<span>1080p Fit</span>
+<span class="material-symbols-outlined text-xs" data-icon="expand_more">expand_more</span>
+</button>
+</div>
+</div>
+<div class="flex items-center bg-surface-container-lowest/85 backdrop-blur-2xl border border-outline-variant/60 rounded-full h-9 px-3.5 shadow-lg shadow-surface-container-lowest/50 text-label-micro font-control-action">
+<div class="flex items-center space-x-3 text-on-surface">
+<span class="flex items-center space-x-1 text-primary">
+<span class="material-symbols-outlined text-sm text-primary-container" data-icon="mouse">mouse</span>
+<span class="hidden sm:inline">Raw Mouse</span>
+</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="flex items-center space-x-1 text-primary">
+<span class="material-symbols-outlined text-sm text-primary-container" data-icon="keyboard">keyboard</span>
+<span class="hidden sm:inline">HW Keyboard Active</span>
+</span>
+</div>
+<button class="ml-3 pl-2 border-l border-outline-variant/50 text-primary-fixed hover:text-primary-container transition-colors flex items-center space-x-0.5">
+<span class="material-symbols-outlined text-xs" data-icon="swap_horiz">swap_horiz</span>
+<span class="text-[10px] uppercase font-bold tracking-wider">Touch</span>
+</button>
+</div>
+<div class="flex items-center space-x-1 bg-surface-container-lowest/85 backdrop-blur-2xl border border-outline-variant/60 rounded-full h-9 px-2 shadow-lg shadow-surface-container-lowest/50">
+<button class="w-7 h-7 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-variant/40 transition-colors" title="Mute/Unmute Audio">
+<span class="material-symbols-outlined text-sm" data-icon="volume_up">volume_up</span>
+</button>
+<button class="w-7 h-7 rounded-full flex items-center justify-center text-primary-container bg-primary-container/10 border border-primary-container/30 hover:bg-primary-container/20 transition-all" title="Fit to Viewport / 1:1 Pixel Match">
+<span class="material-symbols-outlined text-sm" data-icon="zoom_in_map">zoom_in_map</span>
+</button>
+<button class="w-7 h-7 rounded-full flex items-center justify-center text-on-surface hover:text-primary hover:bg-surface-variant/40 transition-colors" title="Toggle On-Screen Keyboard">
+<span class="material-symbols-outlined text-sm" data-icon="keyboard_alt">keyboard_alt</span>
+</button>
+<button class="w-7 h-7 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-variant/40 transition-colors" title="Toggle Real-Time Telemetry HUD">
+<span class="material-symbols-outlined text-sm" data-icon="speed">speed</span>
+</button>
+<button class="w-7 h-7 rounded-full flex items-center justify-center text-error hover:bg-error/20 transition-colors ml-1" title="Disconnect Session">
+<span class="material-symbols-outlined text-sm" data-icon="power_settings_new">power_settings_new</span>
+</button>
+</div>
+</header>
+<main class="relative z-20 flex-1 w-full px-margin-safe flex items-center justify-between pointer-events-none">
+<div class="pointer-events-auto flex flex-col items-center">
+<div class="bg-surface-container-low/85 backdrop-blur-2xl border border-outline-variant/60 rounded-2xl p-1.5 shadow-2xl shadow-surface-container-lowest flex flex-col space-y-2">
+<div class="w-full flex justify-center py-1">
+<span class="w-6 h-1 rounded-full bg-outline-variant/70"></span>
+</div>
+<button class="w-12 h-11 rounded-xl bg-primary-container/20 border border-primary-container text-primary-container glow-cyan-active flex flex-col items-center justify-center active:scale-95 transition-all">
+<span class="font-control-action text-control-action font-bold">CTRL</span>
+<span class="w-1 h-1 rounded-full bg-primary-container mt-0.5"></span>
+</button>
+<button class="w-12 h-11 rounded-xl bg-surface-container-lowest/80 border border-outline-variant/60 text-on-surface hover:text-primary hover:border-secondary hover:bg-surface-container-high/60 flex flex-col items-center justify-center active:scale-95 transition-all">
+<span class="font-control-action text-control-action font-bold">ALT</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant/40 mt-0.5"></span>
+</button>
+<button class="w-12 h-11 rounded-xl bg-surface-container-lowest/80 border border-outline-variant/60 text-on-surface hover:text-primary hover:border-secondary hover:bg-surface-container-high/60 flex flex-col items-center justify-center active:scale-95 transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="window">window</span>
+<span class="font-control-action text-[9px] font-semibold text-on-surface-variant">WIN</span>
+</button>
+<button class="w-12 h-11 rounded-xl bg-surface-container-lowest/80 border border-outline-variant/60 text-on-surface hover:text-primary hover:border-secondary hover:bg-surface-container-high/60 flex flex-col items-center justify-center active:scale-95 transition-all">
+<span class="font-control-action text-control-action font-bold">SHIFT</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant/40 mt-0.5"></span>
+</button>
+<button class="w-12 h-11 rounded-xl bg-surface-container-lowest/80 border border-outline-variant/60 text-on-surface hover:text-primary hover:border-secondary hover:bg-surface-container-high/60 flex items-center justify-center active:scale-95 transition-all">
+<span class="font-control-action text-control-action font-bold">ESC</span>
+</button>
+<button class="w-12 h-11 rounded-xl bg-surface-container-lowest/80 border border-outline-variant/60 text-on-surface hover:text-primary hover:border-secondary hover:bg-surface-container-high/60 flex items-center justify-center active:scale-95 transition-all">
+<span class="font-control-action text-control-action font-bold">TAB</span>
+</button>
+<button class="w-12 h-11 rounded-xl bg-surface-container-lowest/80 border border-outline-variant/60 text-on-surface hover:text-primary hover:border-secondary hover:bg-surface-container-high/60 flex flex-col items-center justify-center active:scale-95 transition-all">
+<span class="material-symbols-outlined text-xs" data-icon="refresh">refresh</span>
+<span class="font-control-action text-[9px] font-bold">F5</span>
+</button>
+</div>
+<div class="mt-2 bg-surface-container-lowest/90 backdrop-blur-md border border-outline-variant/50 rounded-full px-2 py-0.5 text-label-micro text-primary-container font-label-telemetry">
+            CTRL + S
+          </div>
+</div>
+<div class="pointer-events-auto flex flex-col items-end mr-1">
+<div class="mb-2 bg-surface-container-lowest/90 backdrop-blur-2xl border border-outline-variant/60 rounded-full px-2 py-1 flex items-center space-x-1.5 shadow-lg">
+<span class="text-[9px] font-display-hud text-on-surface-variant uppercase tracking-wider pl-1">DPI</span>
+<button class="px-2 py-0.5 rounded-full text-label-micro font-label-telemetry bg-surface-variant/40 text-on-surface-variant hover:text-primary transition-colors">1x</button>
+<button class="px-2 py-0.5 rounded-full text-label-micro font-label-telemetry bg-primary-container text-on-primary-container font-bold shadow-sm">2x</button>
+<button class="px-2 py-0.5 rounded-full text-label-micro font-label-telemetry bg-surface-variant/40 text-on-surface-variant hover:text-primary transition-colors">400 DPI</button>
+</div>
+<div class="relative w-52 h-52 flex items-center justify-center select-none">
+<div class="absolute inset-0 rounded-full bg-primary-container/5 blur-xl pointer-events-none"></div>
+<div class="absolute inset-0 rounded-full border border-outline-variant/60 bg-surface-container-low/75 backdrop-blur-2xl shadow-2xl"></div>
+<button class="absolute top-2 w-28 h-10 rounded-t-full bg-surface-container-lowest/80 border-t border-x border-outline-variant/50 hover:bg-primary-container/20 hover:text-primary-container text-on-surface flex flex-col items-center justify-start pt-1 transition-all active:scale-95" title="Right Click Context">
+<span class="material-symbols-outlined text-sm" data-icon="mouse">mouse</span>
+<span class="font-control-action text-[9px] uppercase font-bold tracking-tight">R-Click</span>
+</button>
+<button class="absolute right-2 w-11 h-24 rounded-r-2xl bg-surface-container-lowest/80 border-r border-y border-outline-variant/50 hover:bg-primary-container/20 hover:text-primary-container text-on-surface flex flex-col items-center justify-center pr-1 transition-all active:scale-95" title="Middle Click / Smooth Scroll">
+<span class="material-symbols-outlined text-base" data-icon="swap_vert">swap_vert</span>
+<span class="font-control-action text-[8px] uppercase font-bold tracking-tighter">Scroll</span>
+</button>
+<button class="absolute bottom-2 w-28 h-10 rounded-b-full bg-surface-container-lowest/80 border-b border-x border-outline-variant/50 hover:bg-primary-container/20 hover:text-primary-container text-on-surface flex flex-col items-center justify-end pb-1 transition-all active:scale-95" title="Switch Windows (Alt+Tab)">
+<span class="font-control-action text-[9px] uppercase font-bold tracking-tight">Alt+Tab</span>
+<span class="material-symbols-outlined text-sm" data-icon="layers">layers</span>
+</button>
+<button class="absolute left-2 w-11 h-24 rounded-l-2xl bg-surface-container-lowest/80 border-l border-y border-outline-variant/50 hover:bg-primary-container/20 hover:text-primary-container text-on-surface flex flex-col items-center justify-center pl-1 transition-all active:scale-95" title="Snipping Tool">
+<span class="material-symbols-outlined text-base" data-icon="screenshot_region">screenshot_region</span>
+<span class="font-control-action text-[8px] uppercase font-bold tracking-tighter">Snip</span>
+</button>
+<button class="absolute top-4 right-4 w-8 h-8 rounded-full bg-surface-container-high/90 border border-outline-variant/60 flex items-center justify-center text-on-surface-variant hover:text-primary-container active:scale-90 transition-all shadow-md" title="Summon Virtual Keyboard">
+<span class="material-symbols-outlined text-xs" data-icon="keyboard">keyboard</span>
+</button>
+<button class="relative z-10 w-24 h-24 rounded-full bg-gradient-to-br from-surface-container-low to-surface-container-lowest border-2 border-primary-container/70 shadow-lg shadow-surface-container-lowest flex flex-col items-center justify-center active:scale-95 group transition-all glow-cyan-active">
+<div class="w-16 h-16 rounded-full bg-primary-container/15 flex flex-col items-center justify-center border border-primary-container/50 group-hover:bg-primary-container/25">
+<span class="material-symbols-outlined text-primary-container text-2xl" data-icon="touch_app">touch_app</span>
+<span class="font-control-action text-control-action text-primary-container font-extrabold tracking-wider mt-0.5">CLICK</span>
+</div>
+</button>
+</div>
+</div>
+</main>
+<footer class="relative z-30 w-full pb-3 px-margin-safe flex items-end justify-between pointer-events-none">
+<div class="hidden sm:flex items-center space-x-2 text-label-micro font-display-hud text-on-surface-variant/70">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span>
+<span>HEVC 10-Bit • D3D12</span>
+</div>
+<div class="pointer-events-auto mx-auto flex items-center bg-surface-container-lowest/80 backdrop-blur-3xl border border-outline-variant/60 rounded-2xl px-3 py-1.5 shadow-2xl shadow-surface-container-lowest">
+<div class="flex items-center space-x-2">
+<div class="relative group flex flex-col items-center">
+<button class="w-10 h-10 rounded-xl bg-surface-container/90 border border-primary-container/60 flex items-center justify-center text-primary-container shadow-md hover:bg-surface-variant transition-transform hover:-translate-y-1" title="VS Code (Active)">
+<span class="material-symbols-outlined text-lg" data-icon="code">code</span>
+</button>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container mt-1 shadow-[0_0_8px_#00F2FE]"></span>
+</div>
+<div class="relative group flex flex-col items-center">
+<button class="w-10 h-10 rounded-xl bg-surface-container/90 border border-outline-variant/40 flex items-center justify-center text-secondary hover:text-primary shadow-md hover:bg-surface-variant transition-transform hover:-translate-y-1" title="Google Chrome">
+<span class="material-symbols-outlined text-lg" data-icon="public">public</span>
+</button>
+<span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant/40 mt-1"></span>
+</div>
+<div class="relative group flex flex-col items-center">
+<button class="w-10 h-10 rounded-xl bg-surface-container/90 border border-outline-variant/40 flex items-center justify-center text-on-surface hover:text-primary shadow-md hover:bg-surface-variant transition-transform hover:-translate-y-1" title="Terminal">
+<span class="material-symbols-outlined text-lg" data-icon="terminal">terminal</span>
+</button>
+<span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant/40 mt-1"></span>
+</div>
+<div class="relative group flex flex-col items-center">
+<button class="w-10 h-10 rounded-xl bg-surface-container/90 border border-outline-variant/40 flex items-center justify-center text-primary-fixed-dim hover:text-primary shadow-md hover:bg-surface-variant transition-transform hover:-translate-y-1" title="Spotify (Synthwave Radio)">
+<span class="material-symbols-outlined text-lg" data-icon="graphic_eq">graphic_eq</span>
+</button>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-fixed-dim mt-1 animate-pulse"></span>
+</div>
+<div class="relative group flex flex-col items-center">
+<button class="w-10 h-10 rounded-xl bg-surface-container/90 border border-outline-variant/40 flex items-center justify-center text-secondary hover:text-primary shadow-md hover:bg-surface-variant transition-transform hover:-translate-y-1" title="Steam Client">
+<span class="material-symbols-outlined text-lg" data-icon="sports_esports">sports_esports</span>
+</button>
+<span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant/40 mt-1"></span>
+</div>
+<div class="h-7 w-[1px] bg-outline-variant/50 mx-1"></div>
+<div class="relative group flex flex-col items-center">
+<button class="w-10 h-10 rounded-xl bg-surface-variant/40 border border-outline-variant/40 flex items-center justify-center text-on-surface hover:text-primary hover:border-primary-container/50 transition-all hover:-translate-y-1" title="Add Application Shortcut">
+<span class="material-symbols-outlined text-lg" data-icon="add">add</span>
+</button>
+<span class="w-1.5 h-1.5 opacity-0 mt-1"></span>
+</div>
+</div>
+</div>
+<div class="hidden lg:flex items-center space-x-3 bg-surface-container-lowest/80 backdrop-blur-md px-3 py-1 rounded-full border border-outline-variant/40 text-label-micro font-display-hud text-on-surface-variant">
+<span>2-Finger: <strong class="text-primary-container font-normal">R-Click</strong></span>
+<span class="text-outline-variant">|</span>
+<span>Pinch: <strong class="text-primary font-normal">Zoom</strong></span>
+<span class="text-outline-variant">|</span>
+<span>3-Finger: <strong class="text-secondary font-normal">Alt-Tab</strong></span>
+</div>
+</footer>
+</div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const ribbonButtons = document.querySelectorAll('main .pointer-events-auto button');
+      ribbonButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          if (!btn.classList.contains('glow-cyan-active')) {
+            btn.classList.add('glow-cyan-active', 'border-primary-container', 'text-primary-container');
+            const dot = btn.querySelector('span.rounded-full');
+            if (dot) dot.classList.replace('bg-outline-variant/40', 'bg-primary-container');
+          } else {
+            if (!btn.innerText.includes('CTRL')) {
+              btn.classList.remove('glow-cyan-active', 'border-primary-container', 'text-primary-container');
+              const dot = btn.querySelector('span.rounded-full');
+              if (dot) dot.classList.replace('bg-primary-container', 'bg-outline-variant/40');
+            }
+          }
+        });
+      });
+    });
+  </script>
+</body></html>

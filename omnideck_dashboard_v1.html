@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>OmniDeck OS — Remote PC Telemetry &amp; Control Deck</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "outline": "#849495",
+            "error": "#ffb4ab",
+            "secondary-container": "#3196e6",
+            "surface-tint": "#00dce6",
+            "surface": "#111319",
+            "primary": "#e0fdff",
+            "surface-container": "#1e1f26",
+            "on-secondary-fixed-variant": "#004a7a",
+            "on-secondary-fixed": "#001d34",
+            "on-primary-fixed": "#002022",
+            "secondary": "#9bcbff",
+            "on-error-container": "#ffdad6",
+            "on-background": "#e2e2eb",
+            "on-surface": "#e2e2eb",
+            "error-container": "#93000a",
+            "secondary-fixed-dim": "#9bcbff",
+            "surface-container-lowest": "#0c0e14",
+            "on-primary-fixed-variant": "#004f53",
+            "surface-variant": "#33343b",
+            "on-secondary-container": "#002c4b",
+            "tertiary-container": "#ffd3a1",
+            "on-tertiary-fixed": "#2a1700",
+            "on-tertiary": "#472a00",
+            "surface-container-highest": "#33343b",
+            "tertiary-fixed-dim": "#ffb95f",
+            "on-tertiary-fixed-variant": "#653e00",
+            "primary-container": "#00f2fe",
+            "background": "#111319",
+            "tertiary-fixed": "#ffddb8",
+            "inverse-surface": "#e2e2eb",
+            "on-error": "#690005",
+            "surface-container-low": "#191b22",
+            "surface-bright": "#373940",
+            "on-surface-variant": "#b9cacb",
+            "on-tertiary-container": "#875400",
+            "inverse-primary": "#00696f",
+            "on-primary-container": "#006a70",
+            "outline-variant": "#3a494b",
+            "on-primary": "#00373a",
+            "secondary-fixed": "#d0e4ff",
+            "surface-container-high": "#282a30",
+            "primary-fixed-dim": "#00dce6",
+            "tertiary": "#fff5ee",
+            "on-secondary": "#003256",
+            "inverse-on-surface": "#2e3037",
+            "primary-fixed": "#6ff6ff",
+            "surface-dim": "#111319"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "margin-safe": "1.75rem",
+            "space-xl": "1.5rem",
+            "space-xs": "0.25rem",
+            "space-md": "0.75rem",
+            "margin": "1rem",
+            "space-lg": "1rem",
+            "space-sm": "0.5rem",
+            "gutter-compact": "0.5rem",
+            "gutter": "0.75rem"
+          },
+          "fontFamily": {
+            "display-hud": [
+              "JetBrains Mono"
+            ],
+            "headline-md": [
+              "Plus Jakarta Sans"
+            ],
+            "headline-lg": [
+              "Plus Jakarta Sans"
+            ],
+            "control-action": [
+              "Plus Jakarta Sans"
+            ],
+            "headline-sm": [
+              "Plus Jakarta Sans"
+            ],
+            "display-hud-mobile": [
+              "JetBrains Mono"
+            ],
+            "label-telemetry": [
+              "JetBrains Mono"
+            ],
+            "body-default": [
+              "Plus Jakarta Sans"
+            ],
+            "label-micro": [
+              "JetBrains Mono"
+            ],
+            "body-strong": [
+              "Plus Jakarta Sans"
+            ]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    
+    .glass-deck {
+      background: rgba(22, 27, 38, 0.75);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(46, 56, 77, 0.6);
+    }
+
+    .glass-deck-active {
+      background: rgba(0, 242, 254, 0.12);
+      border-color: rgba(0, 242, 254, 0.7);
+      box-shadow: 0 0 18px -2px rgba(0, 242, 254, 0.35);
+    }
+
+    .glow-cyan {
+      box-shadow: 0 0 16px rgba(0, 242, 254, 0.3);
+    }
+
+    .pulse-live {
+      animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.92); }
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(132, 148, 149, 0.3);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-surface-container-lowest text-on-surface font-body-default min-h-screen select-none overflow-x-hidden antialiased">
+<header class="fixed top-0 left-0 right-0 z-40 h-10 bg-surface-container-lowest/80 dark:bg-surface-container-lowest/80 backdrop-blur-xl border-b border-outline-variant/40 shadow-lg shadow-surface-container-lowest/50">
+<div class="flex justify-between items-center w-full px-margin-safe h-full">
+<div class="flex items-center space-x-space-md">
+<span class="text-headline-sm font-display-hud font-bold text-primary dark:text-primary tracking-wider flex items-center gap-1.5">
+<span class="inline-block w-2.5 h-2.5 rounded-full bg-primary-container glow-cyan"></span>
+          OmniDeck OS
+        </span>
+<div class="h-4 w-px bg-outline-variant/60"></div>
+<div class="flex items-center space-x-2 bg-surface-container-low/90 border border-outline-variant/40 rounded-full px-2.5 py-0.5">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container pulse-live"></span>
+<span class="font-label-telemetry text-label-micro text-on-surface-variant">TITAN-RIG • Wi-Fi 6E (1.8 Gbps)</span>
+<span class="font-label-telemetry text-label-micro text-primary-container bg-surface-container px-1 rounded font-bold">3.2ms</span>
+</div>
+</div>
+<nav class="hidden md:flex items-center space-x-space-lg">
+<button class="text-primary font-bold border-b border-primary-container text-label-telemetry font-label-telemetry px-2 py-1">
+          HUD
+        </button>
+<button class="text-on-surface-variant hover:text-primary hover:bg-surface-container-high/60 transition-colors duration-150 active:scale-95 transition-transform duration-100 text-label-telemetry font-label-telemetry px-2 py-1">
+          Peripherals
+        </button>
+<button class="text-on-surface-variant hover:text-primary hover:bg-surface-container-high/60 transition-colors duration-150 active:scale-95 transition-transform duration-100 text-label-telemetry font-label-telemetry px-2 py-1">
+          Stream
+        </button>
+</nav>
+<div class="flex items-center space-x-2">
+<div class="hidden lg:flex items-center space-x-1.5 bg-surface-container-high/40 border border-outline-variant/30 rounded-lg px-2 py-0.5">
+<span class="material-symbols-outlined text-primary-container text-sm">mouse</span>
+<span class="text-label-micro font-label-telemetry text-on-surface-variant">Mouse</span>
+</div>
+<div class="hidden lg:flex items-center space-x-1.5 bg-surface-container-high/40 border border-outline-variant/30 rounded-lg px-2 py-0.5">
+<span class="material-symbols-outlined text-primary-container text-sm">keyboard</span>
+<span class="text-label-micro font-label-telemetry text-on-surface-variant">KB</span>
+</div>
+<div class="hidden lg:flex items-center space-x-1.5 bg-surface-container-high/40 border border-outline-variant/30 rounded-lg px-2 py-0.5">
+<span class="material-symbols-outlined text-primary-container text-sm">sports_esports</span>
+<span class="text-label-micro font-label-telemetry text-primary-fixed-dim">Xbox 100%</span>
+</div>
+<div class="h-4 w-px bg-outline-variant/60 mx-1"></div>
+<button class="text-on-surface-variant hover:text-primary hover:bg-surface-container-high/60 transition-colors duration-150 active:scale-95 transition-transform duration-100 p-1 rounded" title="Virtual Keyboard">
+<span class="material-symbols-outlined text-base">keyboard</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary hover:bg-surface-container-high/60 transition-colors duration-150 active:scale-95 transition-transform duration-100 p-1 rounded" title="Network Stream">
+<span class="material-symbols-outlined text-base">wifi</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary hover:bg-surface-container-high/60 transition-colors duration-150 active:scale-95 transition-transform duration-100 p-1 rounded" title="Quick Power Options">
+<span class="material-symbols-outlined text-base">settings_power</span>
+</button>
+<button class="bg-primary-container text-on-primary font-control-action text-control-action px-2.5 py-0.5 rounded shadow-sm hover:brightness-110 active:scale-95 transition-transform">
+          Connect
+        </button>
+</div>
+</div>
+</header>
+<aside class="fixed left-4 top-14 bottom-14 z-50 rounded-xl bg-surface-container-low/85 dark:bg-surface-container-low/85 backdrop-blur-2xl border border-outline-variant/60 shadow-2xl shadow-surface-container-lowest flex flex-col justify-between items-center w-24 py-space-md h-[calc(100vh-7rem)]">
+<div class="flex flex-col items-center text-center space-y-1">
+<div class="w-10 h-10 rounded-xl bg-surface-container-highest border border-outline-variant/80 flex items-center justify-center text-primary-container shadow-inner">
+<span class="material-symbols-outlined text-xl">sports_esports</span>
+</div>
+<div>
+<div class="text-headline-sm font-display-hud text-primary dark:text-primary font-bold text-xs tracking-tight">TITAN-RIG</div>
+<div class="text-label-micro font-label-telemetry text-primary-container">ONLINE 3.2ms</div>
+</div>
+</div>
+<div class="flex flex-col space-y-2 w-full px-2">
+<button class="flex flex-col items-center justify-center bg-primary-container/20 text-primary-container border border-primary-container/40 rounded-lg p-2 shadow-sm transition-all">
+<span class="material-symbols-outlined text-xl">videogame_asset</span>
+<span class="text-control-action font-control-action mt-1 text-[10px]">Controls</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-variant/50 hover:text-primary-fixed transition-all duration-150 active:translate-y-px active:shadow-inner">
+<span class="material-symbols-outlined text-xl">layers</span>
+<span class="text-control-action font-control-action mt-1 text-[10px]">Profiles</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-variant/50 hover:text-primary-fixed transition-all duration-150 active:translate-y-px active:shadow-inner">
+<span class="material-symbols-outlined text-xl">speed</span>
+<span class="text-control-action font-control-action mt-1 text-[10px]">Telemetry</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-surface-variant/50 hover:text-primary-fixed transition-all duration-150 active:translate-y-px active:shadow-inner">
+<span class="material-symbols-outlined text-xl">monitor</span>
+<span class="text-control-action font-control-action mt-1 text-[10px]">Display</span>
+</button>
+</div>
+<div class="flex flex-col items-center space-y-2 w-full px-2">
+<button class="w-full py-1.5 px-1 bg-surface-container border border-primary-container/30 hover:border-primary-container text-primary-container rounded-lg text-label-micro font-label-telemetry transition-colors text-center active:scale-95">
+        Quick Macro
+      </button>
+<div class="w-8 h-px bg-outline-variant/40"></div>
+<div class="flex justify-around w-full">
+<button class="text-on-surface-variant hover:text-primary p-1" title="Audio Switcher">
+<span class="material-symbols-outlined text-lg">volume_up</span>
+</button>
+<button class="text-on-surface-variant hover:text-error p-1" title="Power Control">
+<span class="material-symbols-outlined text-lg">power_settings_new</span>
+</button>
+</div>
+</div>
+</aside>
+<main class="pt-12 pb-20 pl-32 pr-6 min-h-screen flex flex-col justify-start">
+<section class="py-2 flex items-center justify-between">
+<div class="flex items-center space-x-2 overflow-x-auto py-1">
+<button class="px-3.5 py-1.5 rounded-full bg-primary-container/20 border border-primary-container text-primary text-control-action font-control-action flex items-center space-x-2 shadow-sm">
+<span>💻</span>
+<span>Coding Workflow</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+</button>
+<button class="px-3.5 py-1.5 rounded-full glass-deck hover:bg-surface-container-high text-on-surface-variant text-control-action font-control-action flex items-center space-x-2 transition-colors">
+<span>🎮</span>
+<span>Gaming Rig</span>
+</button>
+<button class="px-3.5 py-1.5 rounded-full glass-deck hover:bg-surface-container-high text-on-surface-variant text-control-action font-control-action flex items-center space-x-2 transition-colors">
+<span>🎬</span>
+<span>Video Render</span>
+</button>
+<button class="px-3.5 py-1.5 rounded-full glass-deck hover:bg-surface-container-high text-on-surface-variant text-control-action font-control-action flex items-center space-x-2 transition-colors">
+<span>🛋️</span>
+<span>Couch Media</span>
+</button>
+</div>
+<div class="hidden xl:flex items-center space-x-2">
+<span class="text-label-micro font-label-telemetry text-on-surface-variant">ENCODE: HEVC NVENC • HDR10 ON • 144 FPS</span>
+</div>
+</section>
+<div class="grid grid-cols-12 gap-4 mt-2">
+<div class="col-span-12 lg:col-span-4 flex flex-col space-y-4">
+<div class="glass-deck rounded-xl p-4 shadow-xl flex flex-col space-y-3">
+<div class="flex items-center justify-between border-b border-outline-variant/30 pb-2">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary-container text-lg">speed</span>
+<h2 class="text-headline-sm font-headline-sm text-primary">System Telemetry</h2>
+</div>
+<span class="text-label-micro font-label-telemetry text-primary-container bg-surface-container-lowest px-2 py-0.5 rounded-full border border-primary-container/30">
+              POLL 250ms
+            </span>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between items-baseline font-label-telemetry text-label-micro">
+<span class="text-on-surface font-body-strong">CPU • Ryzen 9 7950X</span>
+<span class="text-primary-container font-bold">24% <span class="text-on-surface-variant font-normal">| 49°C</span></span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-lowest overflow-hidden p-0.5 border border-outline-variant/20">
+<div class="h-full rounded-full bg-gradient-to-r from-secondary-container to-primary-container w-[24%] shadow-[0_0_8px_rgba(0,242,254,0.6)]"></div>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between items-baseline font-label-telemetry text-label-micro">
+<span class="text-on-surface font-body-strong">GPU • GeForce RTX 4090</span>
+<span class="text-tertiary-fixed-dim font-bold">45% <span class="text-on-surface-variant font-normal">| 58°C • 285W</span></span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-lowest overflow-hidden p-0.5 border border-outline-variant/20">
+<div class="h-full rounded-full bg-gradient-to-r from-tertiary-container to-tertiary-fixed-dim w-[45%] shadow-[0_0_8px_rgba(255,185,95,0.4)]"></div>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between items-baseline font-label-telemetry text-label-micro">
+<span class="text-on-surface font-body-strong">RAM • 32.4 / 64 GB DDR5</span>
+<span class="text-on-surface-variant font-label-telemetry">51%</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-lowest overflow-hidden p-0.5 border border-outline-variant/20">
+<div class="h-full rounded-full bg-secondary-fixed-dim w-[51%]"></div>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-2 pt-2 border-t border-outline-variant/30 text-center font-label-telemetry">
+<div class="bg-surface-container-lowest/60 rounded-lg p-1.5 border border-outline-variant/20">
+<div class="text-label-micro text-on-surface-variant">LATENCY</div>
+<div class="text-label-telemetry font-bold text-primary-container">3.2 ms</div>
+</div>
+<div class="bg-surface-container-lowest/60 rounded-lg p-1.5 border border-outline-variant/20">
+<div class="text-label-micro text-on-surface-variant">BITRATE</div>
+<div class="text-label-telemetry font-bold text-on-surface">85 Mbps</div>
+</div>
+<div class="bg-surface-container-lowest/60 rounded-lg p-1.5 border border-outline-variant/20">
+<div class="text-label-micro text-on-surface-variant">RENDER</div>
+<div class="text-label-telemetry font-bold text-secondary">144 Hz</div>
+</div>
+</div>
+</div>
+<div class="glass-deck rounded-xl p-4 shadow-xl flex flex-col space-y-3">
+<div class="flex items-center justify-between border-b border-outline-variant/30 pb-2">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary-container text-lg">tune</span>
+<h2 class="text-headline-sm font-headline-sm text-primary">Audio &amp; Display Setup</h2>
+</div>
+</div>
+<div class="space-y-1">
+<label class="text-label-micro font-label-telemetry text-on-surface-variant uppercase">Output Device</label>
+<div class="grid grid-cols-3 gap-1 bg-surface-container-lowest p-1 rounded-lg border border-outline-variant/30">
+<button class="bg-primary-container text-on-primary-container font-control-action text-[11px] py-1 rounded font-bold shadow-sm">
+                Desktop
+              </button>
+<button class="text-on-surface-variant hover:text-on-surface font-control-action text-[11px] py-1 rounded transition-colors">
+                Bluetooth
+              </button>
+<button class="text-on-surface-variant hover:text-on-surface font-control-action text-[11px] py-1 rounded transition-colors">
+                Handheld
+              </button>
+</div>
+</div>
+<div class="space-y-2 pt-1">
+<div>
+<div class="flex justify-between items-center text-label-micro font-label-telemetry mb-1">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">volume_up</span> Volume</span>
+<span class="text-primary-container font-bold">75%</span>
+</div>
+<div class="relative flex items-center">
+<input class="w-full h-2 bg-surface-container-lowest rounded-lg appearance-none cursor-pointer accent-cyan-400" max="100" min="0" type="range" value="75"/>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-center text-label-micro font-label-telemetry mb-1">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">brightness_medium</span> Rig Monitor</span>
+<span class="text-primary-container font-bold">85% • HDR ON</span>
+</div>
+<div class="relative flex items-center">
+<input class="w-full h-2 bg-surface-container-lowest rounded-lg appearance-none cursor-pointer accent-cyan-400" max="100" min="0" type="range" value="85"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="col-span-12 lg:col-span-8 flex flex-col space-y-4">
+<div class="glass-deck rounded-xl p-4 shadow-xl border-l-2 border-l-primary-container relative overflow-hidden">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-outline-variant/30 pb-3">
+<div class="flex items-center space-x-3">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center border border-outline-variant/60 shadow">
+<span class="material-symbols-outlined text-primary-container text-2xl">code</span>
+</div>
+<div>
+<div class="flex items-center space-x-2">
+<h3 class="text-headline-sm font-headline-sm text-primary">Visual Studio Code</h3>
+<span class="bg-primary-container/20 text-primary border border-primary-container/50 text-[10px] font-label-telemetry px-2 py-0.2 rounded-full">ACTIVE WORKSPACE</span>
+</div>
+<p class="text-label-micro font-label-telemetry text-on-surface-variant">Project: PetSignal • Branch: main [synced] • 1h 45m uptime</p>
+</div>
+</div>
+<div class="flex items-center space-x-2">
+<button class="bg-surface-container hover:bg-surface-container-high border border-outline-variant/60 text-on-surface px-2.5 py-1.5 rounded-lg text-control-action font-control-action flex items-center space-x-1 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-sm text-primary-container">play_arrow</span>
+<span>Run Tests</span>
+</button>
+<button class="bg-surface-container hover:bg-surface-container-high border border-outline-variant/60 text-on-surface px-2.5 py-1.5 rounded-lg text-control-action font-control-action flex items-center space-x-1 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-sm">terminal</span>
+<span>Terminal</span>
+</button>
+<button class="bg-primary-container text-on-primary font-control-action text-control-action px-3 py-1.5 rounded-lg shadow hover:brightness-110 active:scale-95 transition-transform">
+                Focus Window
+              </button>
+</div>
+</div>
+<div class="grid grid-cols-4 gap-2 pt-3 text-label-micro font-label-telemetry text-on-surface-variant">
+<div>RAM Allocation: <span class="text-on-surface font-bold">1.2 GB</span></div>
+<div>Threads: <span class="text-on-surface font-bold">18 Active</span></div>
+<div>File Status: <span class="text-primary-container font-bold">0 unsaved</span></div>
+<div>Linting: <span class="text-primary-container font-bold">PASS (0 err)</span></div>
+</div>
+</div>
+<div class="glass-deck rounded-xl p-4 shadow-xl flex flex-col space-y-3">
+<div class="flex items-center justify-between border-b border-outline-variant/30 pb-2">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary-container text-lg">apps</span>
+<h2 class="text-headline-sm font-headline-sm text-primary">Quick Touch App Launchpad</h2>
+</div>
+<span class="text-label-micro font-label-telemetry text-on-surface-variant">Tap to bring to foreground</span>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+<button class="glass-deck hover:glass-deck-active p-3 rounded-xl flex flex-col items-start space-y-2 text-left transition-all active:scale-95 relative group border border-outline-variant/40">
+<div class="w-8 h-8 rounded-lg bg-[#007ACC]/20 border border-[#007ACC]/50 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-xl">code</span>
+</div>
+<div>
+<div class="text-control-action font-control-action text-on-surface group-hover:text-primary">VS Code</div>
+<div class="text-label-micro font-label-telemetry text-primary-container">Active Window</div>
+</div>
+<span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary-container"></span>
+</button>
+<button class="glass-deck hover:glass-deck-active p-3 rounded-xl flex flex-col items-start space-y-2 text-left transition-all active:scale-95 relative group border border-outline-variant/40">
+<div class="w-8 h-8 rounded-lg bg-secondary-container/20 border border-secondary-container/50 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-xl">public</span>
+</div>
+<div>
+<div class="text-control-action font-control-action text-on-surface group-hover:text-primary">Chrome</div>
+<div class="text-label-micro font-label-telemetry text-on-surface-variant">8 Tabs Active</div>
+</div>
+</button>
+<button class="glass-deck hover:glass-deck-active p-3 rounded-xl flex flex-col items-start space-y-2 text-left transition-all active:scale-95 relative group border border-outline-variant/40">
+<div class="w-8 h-8 rounded-lg bg-tertiary-container/20 border border-tertiary-container/50 flex items-center justify-center text-tertiary-fixed-dim">
+<span class="material-symbols-outlined text-xl">view_in_ar</span>
+</div>
+<div>
+<div class="text-control-action font-control-action text-on-surface group-hover:text-primary">Blender 4.2</div>
+<div class="text-label-micro font-label-telemetry text-on-surface-variant">Ready (OptiX)</div>
+</div>
+</button>
+<button class="glass-deck hover:glass-deck-active p-3 rounded-xl flex flex-col items-start space-y-2 text-left transition-all active:scale-95 relative group border border-outline-variant/40">
+<div class="w-8 h-8 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-xl">terminal</span>
+</div>
+<div>
+<div class="text-control-action font-control-action text-on-surface group-hover:text-primary">Terminal</div>
+<div class="text-label-micro font-label-telemetry text-on-surface-variant">2 Sessions (zsh)</div>
+</div>
+</button>
+<button class="glass-deck hover:glass-deck-active p-3 rounded-xl flex flex-col items-start space-y-2 text-left transition-all active:scale-95 relative group border border-outline-variant/40">
+<div class="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
+<span class="material-symbols-outlined text-xl">graphic_eq</span>
+</div>
+<div>
+<div class="text-control-action font-control-action text-on-surface group-hover:text-primary">Spotify</div>
+<div class="text-label-micro font-label-telemetry text-emerald-400 font-bold">Playing • 320k</div>
+</div>
+<span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-400 pulse-live"></span>
+</button>
+<button class="glass-deck hover:glass-deck-active p-3 rounded-xl flex flex-col items-start space-y-2 text-left transition-all active:scale-95 relative group border border-outline-variant/40">
+<div class="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-secondary-fixed">
+<span class="material-symbols-outlined text-xl">sports_esports</span>
+</div>
+<div>
+<div class="text-control-action font-control-action text-on-surface group-hover:text-primary">Steam</div>
+<div class="text-label-micro font-label-telemetry text-on-surface-variant">1 DL: Cyberpunk</div>
+</div>
+</button>
+<button class="glass-deck hover:glass-deck-active p-3 rounded-xl flex flex-col items-start space-y-2 text-left transition-all active:scale-95 relative group border border-outline-variant/40">
+<div class="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-xl">forum</span>
+</div>
+<div>
+<div class="text-control-action font-control-action text-on-surface group-hover:text-primary">Discord</div>
+<div class="text-label-micro font-label-telemetry text-on-surface-variant">#dev-lobby</div>
+</div>
+</button>
+<button class="glass-deck hover:glass-deck-active p-3 rounded-xl flex flex-col items-start space-y-2 text-left transition-all active:scale-95 relative group border border-outline-variant/40">
+<div class="w-8 h-8 rounded-lg bg-cyan-600/20 border border-cyan-500/40 flex items-center justify-center text-primary-container">
+<span class="material-symbols-outlined text-xl">deployed_code</span>
+</div>
+<div>
+<div class="text-control-action font-control-action text-on-surface group-hover:text-primary">Docker</div>
+<div class="text-label-micro font-label-telemetry text-primary-container font-bold">4 Containers Up</div>
+</div>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<footer class="fixed bottom-2 left-32 right-6 z-40 flex items-center justify-between glass-deck rounded-2xl px-4 py-2 border border-outline-variant/60 shadow-2xl backdrop-blur-2xl">
+<div class="flex items-center space-x-2">
+<span class="text-label-micro font-label-telemetry text-on-surface-variant mr-1">RUNNING:</span>
+<div class="flex items-center space-x-1.5 bg-surface-container px-2 py-1 rounded-lg border border-outline-variant/40 text-on-surface text-control-action font-control-action">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span>VS Code</span>
+<button class="text-on-surface-variant hover:text-error ml-1 leading-none text-xs">✕</button>
+</div>
+<div class="flex items-center space-x-1.5 bg-surface-container px-2 py-1 rounded-lg border border-outline-variant/40 text-on-surface text-control-action font-control-action">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>Chrome</span>
+<button class="text-on-surface-variant hover:text-error ml-1 leading-none text-xs">✕</button>
+</div>
+<div class="flex items-center space-x-1.5 bg-surface-container px-2 py-1 rounded-lg border border-outline-variant/40 text-on-surface text-control-action font-control-action">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+<span>Spotify</span>
+<button class="text-on-surface-variant hover:text-error ml-1 leading-none text-xs">✕</button>
+</div>
+</div>
+<button class="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-primary-container/15 border border-primary-container/60 text-primary-container hover:bg-primary-container/25 transition-colors active:scale-95">
+<span class="material-symbols-outlined text-lg">touch_app</span>
+<span class="text-control-action font-control-action">Touch Mode: Precision Trackpad</span>
+</button>
+<div class="flex items-center space-x-3 bg-surface-container-lowest/80 px-3 py-1 rounded-xl border border-outline-variant/30">
+<div class="w-7 h-7 rounded bg-surface-container-high flex items-center justify-center text-primary-container border border-outline-variant/40">
+<span class="material-symbols-outlined text-sm">album</span>
+</div>
+<div class="text-left font-label-telemetry">
+<div class="text-[11px] font-bold text-on-surface truncate max-w-[130px]">Get Lucky — Daft Punk</div>
+<div class="w-24 h-1 bg-surface-container rounded-full overflow-hidden mt-0.5">
+<div class="w-3/5 h-full bg-primary-container"></div>
+</div>
+</div>
+<div class="flex items-center space-x-1 text-on-surface-variant">
+<button class="hover:text-primary p-0.5"><span class="material-symbols-outlined text-base">skip_previous</span></button>
+<button class="text-primary-container hover:scale-110 p-0.5"><span class="material-symbols-outlined text-lg">pause_circle</span></button>
+<button class="hover:text-primary p-0.5"><span class="material-symbols-outlined text-base">skip_next</span></button>
+</div>
+</div>
+</footer>
+</body></html>
