@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root {
+    @apply bg-canvas text-white font-sans antialiased overflow-hidden w-screen h-screen select-none;
+  }
+}
+
+@layer components {
+  .ios-glass {
+    background: rgba(24, 28, 42, 0.62);
+    backdrop-filter: blur(40px) saturate(190%);
+    -webkit-backdrop-filter: blur(40px) saturate(190%);
+    border: 0.5px solid rgba(255, 255, 255, 0.15);
+  }
+  .ios-glass-vibrant {
+    background: rgba(36, 42, 64, 0.72);
+    backdrop-filter: blur(50px) saturate(210%);
+    -webkit-backdrop-filter: blur(50px) saturate(210%);
+    border: 0.5px solid rgba(255, 255, 255, 0.22);
+  }
+  .ios-glass-subtle {
+    background: rgba(18, 22, 34, 0.45);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 0.5px solid rgba(255, 255, 255, 0.08);
+  }
+  .squircle-dock { border-radius: 28px; }
+  .squircle-pill { border-radius: 9999px; }
+  .squircle-card { border-radius: 18px; }
+  .squircle-key { border-radius: 13px; }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
