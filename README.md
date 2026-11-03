@@ -19,10 +19,10 @@
 ### 2. Built Mobile Application in Landscape (926 × 428 Viewport)
 ![OmniDeck Built Landscape App](app/preview_built.png)
 
-### 3. iPadOS Liquid Glass Stream Workspace
+### 3. Liquid Glass Stream Workspace
 ![iPadOS Stream Workspace](omnitouch_ipados_stream_v2.png)
 
-### 4. iPadOS Control Center & Stage Manager App Library
+### 4. Control Center & Stage Manager App Library
 ![iPadOS Control Center & App Library](omnitouch_control_center_v2.png)
 
 ---
