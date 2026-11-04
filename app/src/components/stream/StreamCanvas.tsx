@@ -4,6 +4,7 @@ import { useInputStore } from '@/stores/input-store'
 interface StreamCanvasProps {
   canvasRef?: Ref<HTMLDivElement>
   remoteStream?: MediaStream | null
+  frameUrl?: string | null
 }
 
 const rustCode = `pub fn render_pipeline(frame: &mut Frame) {
@@ -17,7 +18,7 @@ const rustCode = `pub fn render_pipeline(frame: &mut Frame) {
     queue.submit(encoder.finish());
 }`
 
-export function StreamCanvas({ canvasRef, remoteStream }: StreamCanvasProps) {
+export function StreamCanvas({ canvasRef, remoteStream, frameUrl }: StreamCanvasProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const cursor = useInputStore((state) => state.cursor)
   const hasMovedCursor = cursor.x > 0 || cursor.y > 0
@@ -42,6 +43,13 @@ export function StreamCanvas({ canvasRef, remoteStream }: StreamCanvasProps) {
           muted
           data-testid="live-stream-video"
           className="absolute inset-0 h-full w-full object-contain"
+        />
+      ) : frameUrl ? (
+        <img
+          src={frameUrl}
+          alt="Live host desktop stream"
+          data-testid="live-stream-frame"
+          className="absolute inset-0 h-full w-full object-contain select-none"
         />
       ) : (
         <>

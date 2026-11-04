@@ -4,6 +4,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { StreamWorkspace } from '@/components/stream/StreamWorkspace'
 import { StreamEngine, type StreamEvent } from '@/engines/stream-engine'
 import { useConnectionStore } from '@/stores/connection-store'
+import { useInputStore } from '@/stores/input-store'
 import { useTelemetryStore } from '@/stores/telemetry-store'
 
 describe('StreamWorkspace Integration', () => {
@@ -64,6 +65,54 @@ describe('StreamWorkspace Integration', () => {
     unmount()
   })
 
+  it('forwards ActionPod controls and applies ribbon modifiers to keyboard input', () => {
+    const sendInputSpy = vi.spyOn(StreamEngine.prototype, 'sendInput')
+    render(<StreamWorkspace />)
+
+    fireEvent.click(screen.getByLabelText('Ctrl'))
+    fireEvent.click(screen.getByLabelText('Right Click'))
+
+    expect(sendInputSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'mouse-click',
+        payload: expect.objectContaining({ button: 2, pressed: true }),
+      }),
+    )
+
+    const slider = screen.getByRole('slider', { name: 'Scroll velocity' })
+    vi.spyOn(slider, 'getBoundingClientRect').mockReturnValue({
+      top: 100,
+      height: 100,
+      bottom: 200,
+      left: 0,
+      right: 32,
+      width: 32,
+      x: 0,
+      y: 100,
+      toJSON: () => ({}),
+    })
+    fireEvent.pointerDown(slider, { pointerId: 1, clientY: 175 })
+    expect(sendInputSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'mouse-scroll',
+        payload: { deltaX: 0, deltaY: 50 },
+      }),
+    )
+    fireEvent.pointerUp(slider, { pointerId: 1 })
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'c', code: 'KeyC' }))
+    })
+    expect(sendInputSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'key-down',
+        payload: expect.objectContaining({ key: 'c', ctrlKey: true }),
+      }),
+    )
+    expect(useInputStore.getState().modifiers.Control).toBe('inactive')
+    expect(screen.getByLabelText('Ctrl')).toHaveAttribute('data-state', 'inactive')
+  })
+
   it('updates stores and switches canvas when remote-stream and telemetry events arrive', () => {
     let streamCallback: ((event: StreamEvent) => void) | null = null
     vi.spyOn(StreamEngine.prototype, 'connect').mockImplementation(async (_url, callback) => {
@@ -85,6 +134,7 @@ describe('StreamWorkspace Integration', () => {
     expect(useTelemetryStore.getState().fps).toBe(119.5)
     expect(useTelemetryStore.getState().ping).toBe(1.8)
     expect(useTelemetryStore.getState().bitrate).toBe(62)
+    expect(useTelemetryStore.getState().gpu).toBe(0)
 
     // Emit remote stream
     const mockMediaStream = { id: 'live-stream' } as unknown as MediaStream

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Capacitor } from '@capacitor/core'
 import { Haptics, ImpactStyle } from '@capacitor/haptics'
 import { Keyboard } from '@capacitor/keyboard'
@@ -7,14 +7,34 @@ import { Icon } from '@/components/shared/Icon'
 import { useConnectionStore } from '@/stores/connection-store'
 import { useInputStore } from '@/stores/input-store'
 
-export function ActionPod() {
+export interface ActionPodProps {
+  onRightClick?: () => void
+  onScroll?: (deltaY: number) => void
+}
+
+export function ActionPod({ onRightClick, onScroll }: ActionPodProps = {}) {
   const setScroll = useInputStore((state) => state.setScroll)
   const setActiveView = useConnectionStore((state) => state.setActiveView)
   const [keyboardOpen, setKeyboardOpen] = useState(false)
   const [sliderPosition, setSliderPosition] = useState(50)
   const sliderRef = useRef<HTMLDivElement>(null)
+  const onScrollRef = useRef(onScroll)
+  onScrollRef.current = onScroll
+  const scrollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const clearScrollTimer = () => {
+    if (scrollTimerRef.current !== null) {
+      clearInterval(scrollTimerRef.current)
+      scrollTimerRef.current = null
+    }
+  }
+
+  useEffect(() => {
+    return () => clearScrollTimer()
+  }, [])
 
   const handleRightClick = async () => {
+    onRightClick?.()
     if (Capacitor.isNativePlatform()) {
       try {
         await Haptics.impact({ style: ImpactStyle.Light })
@@ -42,14 +62,29 @@ export function ActionPod() {
 
   const updateScroll = (clientY: number) => {
     const bounds = sliderRef.current?.getBoundingClientRect()
-    if (!bounds) return
-    const position = Math.min(100, Math.max(0, ((clientY - bounds.top) / bounds.height) * 100))
+    const height = bounds && bounds.height > 0 ? bounds.height : 112
+    const top = bounds ? bounds.top : 0
+    const rawPos = ((clientY - top) / height) * 100
+    const position = Math.min(100, Math.max(0, Number.isFinite(rawPos) ? rawPos : 50))
     setSliderPosition(position)
-    setScroll({ velocity: (position - 50) * 2, isScrolling: true })
+    const velocity = Math.round((position - 50) * 2)
+    const isScrolling = velocity !== 0
+    setScroll({ velocity, isScrolling })
+
+    clearScrollTimer()
+    if (isScrolling) {
+      onScrollRef.current?.(velocity)
+      scrollTimerRef.current = setInterval(() => {
+        onScrollRef.current?.(velocity)
+      }, 80)
+    }
   }
 
   const stopScroll = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+    clearScrollTimer()
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture?.(event.pointerId)
+    }
     setSliderPosition(50)
     setScroll({ velocity: 0, isScrolling: false })
   }
@@ -70,11 +105,13 @@ export function ActionPod() {
         aria-valuenow={Math.round((sliderPosition - 50) * 2)}
         tabIndex={0}
         onPointerDown={(event) => {
-          event.currentTarget.setPointerCapture(event.pointerId)
+          event.currentTarget.setPointerCapture?.(event.pointerId)
           updateScroll(event.clientY)
         }}
         onPointerMove={(event) => {
-          if (event.currentTarget.hasPointerCapture(event.pointerId)) updateScroll(event.clientY)
+          if (!event.currentTarget.hasPointerCapture || event.currentTarget.hasPointerCapture(event.pointerId)) {
+            updateScroll(event.clientY)
+          }
         }}
         onPointerUp={stopScroll}
         onPointerCancel={stopScroll}

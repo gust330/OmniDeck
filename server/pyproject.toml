@@ -1,0 +1,6 @@
+[tool.pytest.ini_options]
+pythonpath = [
+    ".",
+    "/home/gustavo/.hermes/installs/78b77f3f76fb7ddb/environments/5fcdf603a64e4031940a9b8974591329/venv/lib/python3.14/site-packages"
+]
+testpaths = ["tests"]

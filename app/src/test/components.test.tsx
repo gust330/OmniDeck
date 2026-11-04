@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { ModifierRibbon } from '@/components/stream/ModifierRibbon';
@@ -76,6 +76,32 @@ describe('UI Component Architecture (iPadOS 18 Liquid Glass)', () => {
   });
 
   describe('ActionPod', () => {
+    it('dispatches right-click and scroll velocity through its input controls', () => {
+      const onRightClick = vi.fn();
+      const onScroll = vi.fn();
+      render(<ActionPod onRightClick={onRightClick} onScroll={onScroll} />);
+
+      fireEvent.click(screen.getByLabelText('Right Click'));
+      expect(onRightClick).toHaveBeenCalledTimes(1);
+
+      const slider = screen.getByRole('slider', { name: 'Scroll velocity' });
+      vi.spyOn(slider, 'getBoundingClientRect').mockReturnValue({
+        top: 100,
+        height: 100,
+        bottom: 200,
+        left: 0,
+        right: 32,
+        width: 32,
+        x: 0,
+        y: 100,
+        toJSON: () => ({}),
+      });
+      fireEvent.pointerDown(slider, { pointerId: 1, clientY: 175 });
+      expect(onScroll).toHaveBeenCalledWith(50);
+      fireEvent.pointerUp(slider, { pointerId: 1 });
+      expect(useInputStore.getState().scroll).toEqual({ velocity: 0, isScrolling: false });
+    });
+
     it('renders right click, scroll trigger, and expose actions', () => {
       render(<ActionPod />);
       expect(screen.getByLabelText('Right Click')).toBeInTheDocument();

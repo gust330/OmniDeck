@@ -36,7 +36,7 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
   setStatus: (status) => set({ status }),
   hostConfig: {
     name: 'TITAN-RIG',
-    url: 'wss://192.168.1.100:9090',
+    url: 'http://192.168.1.100:8080',
     resolution: '4K',
     bitrate: 50,
     codec: 'av1',

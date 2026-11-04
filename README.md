@@ -62,6 +62,12 @@ OmniDeck/
 │   ├── ios/                          # Native Xcode project targeting iOS 15+
 │   ├── android/                      # Native Android project with Gradle wrapper
 │   └── capacitor.config.ts           # Capacitor configuration with landscape orientation lock
+├── server/                           # FastAPI host capture, control, telemetry, and app discovery
+│   ├── main.py                       # Executable server entrypoint
+│   ├── omnideck/                     # REST/WebSocket service and Linux backend
+│   ├── tests/                        # Host API, streaming, backend, and entrypoint tests
+│   ├── requirements.txt              # Python runtime and test dependencies
+│   └── run.sh                        # Starts the host on 0.0.0.0:8080
 ├── DESIGN_SYSTEM.md                  # Complete design system specification (Apple HIG liquid glass)
 ├── index.html                        # Interactive smartphone landscape frame showcase
 └── LICENSE                           # MIT License
@@ -98,8 +104,31 @@ OmniDeck/
 ## Quickstart
 
 ### Prerequisites
+- Python 3.11+ with PipeWire (`wpctl`), systemd-logind, and a graphical Linux session
 - Node.js 18+ (tested on Node v22)
 - npm 9+
+
+### Install and Run the Host Server
+
+```bash
+cd server
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
+./run.sh
+```
+
+The host listens on `0.0.0.0:8080`. Allow TCP port 8080 through the host firewall, then set the mobile app's host URL to `http://<PC-LAN-IP>:8080`. The stream endpoint is `ws://<PC-LAN-IP>:8080/ws/stream`.
+
+On Fedora, grant the desktop capture/input permissions requested by the active Wayland session. Set `OMNIDECK_CUA_DRIVER=/path/to/cua-driver` when the driver is not in the default Hermes tools location. Optional bind overrides are `OMNIDECK_HOST` and `OMNIDECK_PORT`.
+
+Verify the server independently:
+
+```bash
+cd server
+pytest -v
+curl http://127.0.0.1:8080/api/status
+```
 
 ### Run Locally in Browser / Simulator
 

@@ -94,6 +94,50 @@ describe('InputEngine', () => {
       expect(commands[0].payload.key).toBe('Tab');
     });
 
+    it('dispatches ActionPod right-click and scroll commands through the attached callback', () => {
+      engine.attach(container, (cmd) => commands.push(cmd));
+
+      engine.rightClick();
+      engine.scroll(42);
+
+      expect(commands).toHaveLength(3);
+      expect(commands[0]).toMatchObject({
+        type: 'mouse-click',
+        payload: { button: 2, pressed: true, clickCount: 1 },
+      });
+      expect(commands[1]).toMatchObject({
+        type: 'mouse-click',
+        payload: { button: 2, pressed: false, clickCount: 1 },
+      });
+      expect(commands[2]).toMatchObject({
+        type: 'mouse-scroll',
+        payload: { deltaX: 0, deltaY: 42 },
+      });
+    });
+
+    it('merges active ribbon modifiers into keyboard commands and consumes latched state', () => {
+      const consumeModifiers = vi.fn();
+      engine.attach(
+        container,
+        (cmd) => commands.push(cmd),
+        () => ({ Control: 'latched', Alt: 'inactive', Meta: 'locked', Shift: 'inactive' }),
+        consumeModifiers,
+      );
+
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', code: 'KeyK', shiftKey: true }));
+      window.dispatchEvent(new KeyboardEvent('keyup', { key: 'k', code: 'KeyK', shiftKey: true }));
+
+      expect(commands[0]).toMatchObject({
+        type: 'key-down',
+        payload: { key: 'k', ctrlKey: true, altKey: false, shiftKey: true, metaKey: true },
+      });
+      expect(commands[1]).toMatchObject({
+        type: 'key-up',
+        payload: { key: 'k', ctrlKey: true, altKey: false, shiftKey: true, metaKey: true },
+      });
+      expect(consumeModifiers).toHaveBeenCalledTimes(1);
+    });
+
     it('handles mouse click down and up', () => {
       engine.attach(container, (cmd) => commands.push(cmd));
 

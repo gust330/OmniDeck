@@ -17,6 +17,7 @@ export function StreamWorkspace() {
   const inputEngineRef = useRef<InputEngine | null>(null)
   const streamEngineRef = useRef<StreamEngine | null>(null)
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null)
+  const [frameUrl, setFrameUrl] = useState<string | null>(null)
 
   const hostUrl = useConnectionStore((state) => state.hostConfig.url)
   const setStatus = useConnectionStore((state) => state.setStatus)
@@ -38,13 +39,23 @@ export function StreamWorkspace() {
         case 'disconnected':
           setStatus('disconnected')
           setRemoteStream(null)
+          setFrameUrl(null)
           break
         case 'remote-stream':
           setRemoteStream((event.data as MediaStream) ?? null)
           break
+        case 'frame':
+          if (typeof event.data === 'string') {
+            setFrameUrl(event.data)
+          }
+          break
         case 'telemetry':
           if (event.data && typeof event.data === 'object') {
-            updateTelemetry(event.data as Partial<TelemetryData>)
+            const data = event.data as Partial<TelemetryData>
+            updateTelemetry({
+              ...data,
+              gpu: typeof data.gpu === 'number' ? data.gpu : 0,
+            })
           }
           break
         case 'error':
@@ -57,15 +68,20 @@ export function StreamWorkspace() {
 
     const inputEngine = new InputEngine()
     inputEngineRef.current = inputEngine
-    inputEngine.attach(canvas, (command) => {
-      if (command.type === 'mouse-move') {
-        const payload = command.payload as { dx?: number; dy?: number }
-        if (typeof payload.dx === 'number' && typeof payload.dy === 'number') {
-          moveCursor(payload.dx, payload.dy)
+    inputEngine.attach(
+      canvas,
+      (command) => {
+        if (command.type === 'mouse-move') {
+          const payload = command.payload as { dx?: number; dy?: number }
+          if (typeof payload.dx === 'number' && typeof payload.dy === 'number') {
+            moveCursor(payload.dx, payload.dy)
+          }
         }
-      }
-      streamEngine.sendInput(command)
-    })
+        streamEngine.sendInput(command)
+      },
+      () => useInputStore.getState().modifiers,
+      () => useInputStore.getState().consumeLatched(),
+    )
 
     return () => {
       inputEngine.detach()
@@ -73,16 +89,20 @@ export function StreamWorkspace() {
       streamEngine.disconnect()
       streamEngineRef.current = null
       setRemoteStream(null)
+      setFrameUrl(null)
     }
   }, [hostUrl, moveCursor, setStatus, updateTelemetry])
 
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-canvas text-white">
-      <StreamCanvas canvasRef={canvasRef} remoteStream={remoteStream} />
+      <StreamCanvas canvasRef={canvasRef} remoteStream={remoteStream} frameUrl={frameUrl} />
       <DynamicIslandHUD />
       <div className="pointer-events-none absolute inset-x-5 top-1/2 z-20 flex -translate-y-1/2 items-center justify-between">
         <ModifierRibbon />
-        <ActionPod />
+        <ActionPod
+          onRightClick={() => inputEngineRef.current?.rightClick()}
+          onScroll={(deltaY) => inputEngineRef.current?.scroll(deltaY)}
+        />
       </div>
       <FloatingDock />
     </main>

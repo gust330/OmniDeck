@@ -12,6 +12,20 @@ export interface InputCommand {
 
 export type InputCommandCallback = (command: InputCommand) => void
 
+type KeyboardModifierState = {
+  Control?: 'inactive' | 'latched' | 'locked'
+  Alt?: 'inactive' | 'latched' | 'locked'
+  Meta?: 'inactive' | 'latched' | 'locked'
+  Shift?: 'inactive' | 'latched' | 'locked'
+}
+
+type KeyboardModifierFlags = {
+  ctrlKey: boolean
+  altKey: boolean
+  shiftKey: boolean
+  metaKey: boolean
+}
+
 export const SUPPRESSED_KEYS = new Set([
   'Tab',
   'Escape',
@@ -69,11 +83,14 @@ export function shouldSuppressKey(event: KeyboardEvent): boolean {
   )
 }
 
-type TouchPoint = { x: number; y: number }
+type TouchPoint = { x: number; y: number; normalizedX?: number; normalizedY?: number }
 
 export class InputEngine {
   private element: HTMLElement | null = null
   private callback: InputCommandCallback | null = null
+  private getModifierState: (() => KeyboardModifierState) | null = null
+  private consumeModifiers: (() => unknown) | null = null
+  private activeKeyboardModifiers = new Map<string, KeyboardModifierFlags>()
   private abortController: AbortController | null = null
   private gamepadAnimationFrame: number | null = null
   private touchStartPoints = new Map<number, TouchPoint>()
@@ -81,10 +98,17 @@ export class InputEngine {
   private touchMoved = false
   private lastTapTime = 0
 
-  attach(element: HTMLElement, callback: InputCommandCallback): void {
+  attach(
+    element: HTMLElement,
+    callback: InputCommandCallback,
+    getModifierState?: () => KeyboardModifierState,
+    consumeModifiers?: () => unknown,
+  ): void {
     this.detach()
     this.element = element
     this.callback = callback
+    this.getModifierState = getModifierState ?? null
+    this.consumeModifiers = consumeModifiers ?? null
     this.abortController = new AbortController()
     const options = { signal: this.abortController.signal }
 
@@ -122,8 +146,19 @@ export class InputEngine {
 
     this.touchStartPoints.clear()
     this.lastTouchPoints.clear()
+    this.activeKeyboardModifiers.clear()
     this.element = null
     this.callback = null
+    this.getModifierState = null
+    this.consumeModifiers = null
+  }
+
+  rightClick(coords?: { normalizedX?: number; normalizedY?: number }): void {
+    this.emitTap(2, 1, coords)
+  }
+
+  scroll(deltaY: number, deltaX = 0): void {
+    this.emit('mouse-scroll', { deltaX, deltaY })
   }
 
   static calculatePointerDelta(
@@ -134,12 +169,46 @@ export class InputEngine {
     return { dx: movementX * sensitivity, dy: movementY * sensitivity }
   }
 
+  private normalizeCoordinates(clientX?: number, clientY?: number): { normalizedX?: number; normalizedY?: number } {
+    if (!this.element || typeof clientX !== 'number' || typeof clientY !== 'number') return {}
+    const rect = this.element.getBoundingClientRect()
+    if (!rect || rect.width <= 0 || rect.height <= 0) return {}
+    const normalizedX = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width))
+    const normalizedY = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height))
+    return { normalizedX, normalizedY }
+  }
+
   private emit(type: InputCommand['type'], payload: Record<string, unknown>): void {
     this.callback?.({ type, payload, timestamp: Date.now() })
   }
 
+  private resolveModifierFlags(event: KeyboardEvent): KeyboardModifierFlags {
+    const activeModifiers = this.getModifierState?.()
+    const isModifierActive = (state?: 'inactive' | 'latched' | 'locked') =>
+      state === 'latched' || state === 'locked'
+
+    return {
+      ctrlKey: Boolean(event.ctrlKey || isModifierActive(activeModifiers?.Control)),
+      altKey: Boolean(event.altKey || isModifierActive(activeModifiers?.Alt)),
+      shiftKey: Boolean(event.shiftKey || isModifierActive(activeModifiers?.Shift)),
+      metaKey: Boolean(event.metaKey || isModifierActive(activeModifiers?.Meta)),
+    }
+  }
+
   private handleKeyDown = (event: KeyboardEvent): void => {
-    if (shouldSuppressKey(event)) {
+    const modifierFlags = this.resolveModifierFlags(event)
+    const keyIdentifier = event.code || event.key
+    this.activeKeyboardModifiers.set(keyIdentifier, modifierFlags)
+
+    const effectiveEvent = {
+      key: event.key,
+      ctrlKey: modifierFlags.ctrlKey,
+      altKey: modifierFlags.altKey,
+      shiftKey: modifierFlags.shiftKey,
+      metaKey: modifierFlags.metaKey,
+    } as KeyboardEvent
+
+    if (shouldSuppressKey(effectiveEvent)) {
       event.preventDefault()
       event.stopPropagation()
     }
@@ -147,25 +216,32 @@ export class InputEngine {
       key: event.key,
       code: event.code,
       repeat: event.repeat,
-      ctrlKey: event.ctrlKey,
-      altKey: event.altKey,
-      shiftKey: event.shiftKey,
-      metaKey: event.metaKey,
+      ...modifierFlags,
     })
+    this.consumeModifiers?.()
   }
 
   private handleKeyUp = (event: KeyboardEvent): void => {
-    if (shouldSuppressKey(event)) {
+    const keyIdentifier = event.code || event.key
+    const modifierFlags = this.activeKeyboardModifiers.get(keyIdentifier) ?? this.resolveModifierFlags(event)
+    this.activeKeyboardModifiers.delete(keyIdentifier)
+
+    const effectiveEvent = {
+      key: event.key,
+      ctrlKey: modifierFlags.ctrlKey,
+      altKey: modifierFlags.altKey,
+      shiftKey: modifierFlags.shiftKey,
+      metaKey: modifierFlags.metaKey,
+    } as KeyboardEvent
+
+    if (shouldSuppressKey(effectiveEvent)) {
       event.preventDefault()
       event.stopPropagation()
     }
     this.emit('key-up', {
       key: event.key,
       code: event.code,
-      ctrlKey: event.ctrlKey,
-      altKey: event.altKey,
-      shiftKey: event.shiftKey,
-      metaKey: event.metaKey,
+      ...modifierFlags,
     })
   }
 
@@ -183,11 +259,13 @@ export class InputEngine {
   }
 
   private handleMouseDown = (event: MouseEvent): void => {
-    this.emit('mouse-click', { button: event.button, pressed: true })
+    const coords = this.normalizeCoordinates(event.clientX, event.clientY)
+    this.emit('mouse-click', { button: event.button, pressed: true, ...coords })
   }
 
   private handleMouseUp = (event: MouseEvent): void => {
-    this.emit('mouse-click', { button: event.button, pressed: false })
+    const coords = this.normalizeCoordinates(event.clientX, event.clientY)
+    this.emit('mouse-click', { button: event.button, pressed: false, ...coords })
   }
 
   private handleWheel = (event: WheelEvent): void => {
@@ -205,7 +283,8 @@ export class InputEngine {
     this.touchStartPoints.clear()
     this.lastTouchPoints.clear()
     for (const touch of Array.from(event.touches)) {
-      const point = { x: touch.clientX, y: touch.clientY }
+      const coords = this.normalizeCoordinates(touch.clientX, touch.clientY)
+      const point = { x: touch.clientX, y: touch.clientY, ...coords }
       this.touchStartPoints.set(touch.identifier, point)
       this.lastTouchPoints.set(touch.identifier, point)
     }
@@ -221,11 +300,12 @@ export class InputEngine {
 
     const dx = touch.clientX - previous.x
     const dy = touch.clientY - previous.y
+    const coords = this.normalizeCoordinates(touch.clientX, touch.clientY)
     if (dx !== 0 || dy !== 0) {
       this.touchMoved = true
-      this.emit('mouse-move', { dx, dy })
+      this.emit('mouse-move', { dx, dy, ...coords })
     }
-    this.lastTouchPoints.set(touch.identifier, { x: touch.clientX, y: touch.clientY })
+    this.lastTouchPoints.set(touch.identifier, { x: touch.clientX, y: touch.clientY, ...coords })
   }
 
   private handleTouchEnd = (event: TouchEvent): void => {
@@ -233,22 +313,27 @@ export class InputEngine {
     if (event.touches.length > 0) return
 
     const fingerCount = this.touchStartPoints.size
+    const primaryPoint = this.touchStartPoints.values().next().value as TouchPoint | undefined
+    const coords = primaryPoint && typeof primaryPoint.normalizedX === 'number' && typeof primaryPoint.normalizedY === 'number'
+      ? { normalizedX: primaryPoint.normalizedX, normalizedY: primaryPoint.normalizedY }
+      : undefined
+
     if (!this.touchMoved && fingerCount === 2) {
-      this.emitTap(2, 1)
+      this.emitTap(2, 1, coords)
     } else if (!this.touchMoved && fingerCount === 1) {
       const now = Date.now()
       const clickCount = now - this.lastTapTime <= 300 ? 2 : 1
       this.lastTapTime = clickCount === 2 ? 0 : now
-      this.emitTap(0, clickCount)
+      this.emitTap(0, clickCount, coords)
     }
 
     this.touchStartPoints.clear()
     this.lastTouchPoints.clear()
   }
 
-  private emitTap(button: number, clickCount: number): void {
-    this.emit('mouse-click', { button, pressed: true, clickCount })
-    this.emit('mouse-click', { button, pressed: false, clickCount })
+  private emitTap(button: number, clickCount: number, coords?: { normalizedX?: number; normalizedY?: number }): void {
+    this.emit('mouse-click', { button, pressed: true, clickCount, ...(coords ?? {}) })
+    this.emit('mouse-click', { button, pressed: false, clickCount, ...(coords ?? {}) })
   }
 
   private handleGamepadConnected = (): void => this.startGamepadPolling()

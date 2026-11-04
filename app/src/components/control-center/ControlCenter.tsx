@@ -1,5 +1,8 @@
+import { useMemo } from 'react'
+
 import { useConnectionStore } from '@/stores/connection-store'
 import { useTelemetryStore } from '@/stores/telemetry-store'
+import { StreamEngine } from '@/engines/stream-engine'
 
 interface IconProps {
   name: string
@@ -101,6 +104,30 @@ export default function ControlCenter() {
     toggleSettings,
   } = useConnectionStore()
   const telemetry = { cpu, gpu, ram }
+  const apiClient = useMemo(() => {
+    const engine = new StreamEngine()
+    engine.configureEndpoint(hostConfig.url)
+    return engine
+  }, [hostConfig.url])
+
+  const handleVolumeChange = (nextVolume: number) => {
+    setVolume(nextVolume)
+    void apiClient.setVolume(nextVolume).catch(() => {})
+  }
+
+  const handleToggleCrop = () => {
+    const nextCrop = !singleWindowFocus
+    toggleSingleWindowFocus()
+    void apiClient.setCrop(nextCrop).catch(() => {})
+  }
+
+  const handleChooseApp = () => {
+    setActiveView('app-library')
+  }
+
+  const handlePowerAction = (action: 'lock' | 'suspend' | 'shutdown' | 'restart') => {
+    void apiClient.setPower(action).catch(() => {})
+  }
 
   return (
     <main className="h-full w-full overflow-y-auto bg-canvas px-6 py-5 text-white no-scrollbar">
@@ -138,7 +165,7 @@ export default function ControlCenter() {
         <section className="space-y-4 xl:col-span-5" aria-label="System controls">
           <div className="ios-glass-subtle squircle-card grid gap-5 p-5 sm:grid-cols-[190px_1fr]">
             <div className="flex gap-4">
-              <VerticalSlider label="Volume" icon="volume_up" value={volume} onChange={setVolume} />
+              <VerticalSlider label="Volume" icon="volume_up" value={volume} onChange={handleVolumeChange} />
               <VerticalSlider label="Rig HDR Brightness" icon="light_mode" value={brightness} onChange={setBrightness} />
             </div>
 
@@ -209,7 +236,55 @@ export default function ControlCenter() {
               <h2 className="text-base font-semibold">Single Window Focus</h2>
               <p className="mt-1 text-sm text-white/50">Keep the selected app isolated on your phone.</p>
             </div>
-            <Toggle checked={singleWindowFocus} onChange={toggleSingleWindowFocus} label="Single Window Focus" />
+            <Toggle checked={singleWindowFocus} onChange={handleToggleCrop} label="Single Window Focus" />
+          </div>
+
+          <div className="ios-glass-subtle squircle-card p-5">
+            <div className="mb-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Icon name="power_settings_new" className="text-[20px] text-apple-red" />
+                <h2 className="text-base font-semibold">Rig Power</h2>
+              </div>
+              <span className="text-xs text-white/45">ACPI State</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <button
+                type="button"
+                aria-label="Rig Lock"
+                onClick={() => handlePowerAction('lock')}
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-white/[0.08] text-xs font-medium text-white/85 transition hover:bg-white/[0.14]"
+              >
+                <Icon name="lock" className="text-[16px]" />
+                Lock
+              </button>
+              <button
+                type="button"
+                aria-label="Rig Sleep / Suspend"
+                onClick={() => handlePowerAction('suspend')}
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-white/[0.08] text-xs font-medium text-white/85 transition hover:bg-white/[0.14]"
+              >
+                <Icon name="bedtime" className="text-[16px]" />
+                Sleep
+              </button>
+              <button
+                type="button"
+                aria-label="Rig Restart"
+                onClick={() => handlePowerAction('restart')}
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-white/[0.08] text-xs font-medium text-white/85 transition hover:bg-white/[0.14]"
+              >
+                <Icon name="restart_alt" className="text-[16px]" />
+                Restart
+              </button>
+              <button
+                type="button"
+                aria-label="Rig Shutdown"
+                onClick={() => handlePowerAction('shutdown')}
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-apple-red/20 text-xs font-medium text-apple-red transition hover:bg-apple-red hover:text-white"
+              >
+                <Icon name="power_settings_new" className="text-[16px]" />
+                Shutdown
+              </button>
+            </div>
           </div>
         </section>
 
@@ -235,7 +310,11 @@ export default function ControlCenter() {
                         {app.status}
                       </span>
                     </div>
-                    <button type="button" className="mt-3 inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-white/[0.08] text-xs font-medium text-white/80 transition-colors hover:bg-white/[0.13]">
+                    <button
+                      type="button"
+                      onClick={handleChooseApp}
+                      className="mt-3 inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-white/[0.08] text-xs font-medium text-white/80 transition-colors hover:bg-white/[0.13]"
+                    >
                       <Icon name="smartphone" className="text-[16px]" />
                       Focus on Phone
                     </button>

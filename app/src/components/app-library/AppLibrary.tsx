@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { Icon } from '@/components/shared/Icon'
+import { StreamEngine } from '@/engines/stream-engine'
 import { useConnectionStore } from '@/stores/connection-store'
 import type { AppCategory, RemoteApp } from '@/types'
 
-const apps: RemoteApp[] = [
+export const defaultApps: RemoteApp[] = [
   { id: 'vscode', name: 'VS Code', icon: 'code', category: 'dev', status: 'active', subtitle: 'OmniDeck workspace' },
   { id: 'chrome', name: 'Chrome', icon: 'language', category: 'web', status: 'active', subtitle: '12 tabs' },
   { id: 'terminal', name: 'zsh Terminal', icon: 'terminal', category: 'dev', status: 'active', subtitle: '2 sessions' },
@@ -33,10 +34,47 @@ const iconSurfaces: Record<string, string> = {
   docker: 'bg-[#087ca6]',
 }
 
+type DiscoveredApp = Partial<RemoteApp> & { running?: boolean }
+
+function createApiClient(url: string): StreamEngine {
+  const engine = new StreamEngine()
+  engine.configureEndpoint(url)
+  return engine
+}
+
 export default function AppLibrary() {
   const { hostConfig, setActiveView, toggleSettings } = useConnectionStore()
   const [category, setCategory] = useState<'all' | AppCategory>('all')
   const [query, setQuery] = useState('')
+  const [apps, setApps] = useState<RemoteApp[]>(defaultApps)
+
+  useEffect(() => {
+    let active = true
+    const engine = createApiClient(hostConfig.url)
+    void engine.listApps()
+      .then((remoteApps) => {
+        if (!active || !Array.isArray(remoteApps) || remoteApps.length === 0) return
+        const mapped = remoteApps.map((item, index) => {
+          const raw = item as DiscoveredApp
+          const isRunning = typeof raw.running === 'boolean' ? raw.running : raw.status === 'active'
+          return {
+            id: raw.id ?? `app-${index}.desktop`,
+            name: raw.name ?? 'Remote Application',
+            icon: raw.icon ?? 'terminal',
+            category: (raw.category ?? 'dev') as AppCategory,
+            status: (isRunning ? 'active' : 'idle') as 'active' | 'idle',
+            subtitle: raw.subtitle ?? (isRunning ? 'Running' : 'Ready'),
+          }
+        })
+        setApps(mapped)
+      })
+      .catch(() => {
+        // Disconnected mock fallback: keep defaultApps
+      })
+    return () => {
+      active = false
+    }
+  }, [hostConfig.url])
 
   const visibleApps = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase()
@@ -45,9 +83,13 @@ export default function AppLibrary() {
       const matchesQuery = normalizedQuery === '' || app.name.toLowerCase().includes(normalizedQuery)
       return inCategory && matchesQuery
     })
-  }, [category, query])
+  }, [apps, category, query])
 
-  const focusApp = () => setActiveView('stream')
+  const focusApp = (appId: string) => {
+    const engine = createApiClient(hostConfig.url)
+    void engine.focusApp(appId).catch(() => {})
+    setActiveView('stream')
+  }
 
   return (
     <main className="h-full w-full overflow-y-auto bg-canvas px-6 py-5 text-white no-scrollbar">
@@ -138,7 +180,7 @@ export default function AppLibrary() {
                 </div>
                 <button
                   type="button"
-                  onClick={focusApp}
+                  onClick={() => focusApp(app.id)}
                   aria-label={`Focus ${app.name} on Phone`}
                   className="mt-4 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-xl bg-white/[0.09] text-xs font-semibold text-white/85 transition-colors hover:bg-white/[0.15] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-apple-blue"
                 >

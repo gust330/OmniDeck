@@ -23,6 +23,10 @@ interface TelemetryStore extends TelemetryData {
 
 export const useTelemetryStore = create<TelemetryStore>((set) => ({
   ...defaultTelemetry,
-  updateTelemetry: (telemetry) => set(telemetry),
+  updateTelemetry: (telemetry) =>
+    set((state) => ({
+      ...telemetry,
+      gpu: telemetry.gpu !== undefined ? telemetry.gpu : (state.gpu === defaultTelemetry.gpu ? 0 : state.gpu),
+    })),
   resetTelemetry: () => set(defaultTelemetry),
 }))
