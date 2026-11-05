@@ -188,6 +188,10 @@ export class StreamEngine {
     return Array.isArray(payload) ? payload : payload.apps ?? []
   }
 
+  async openApp<T = unknown>(appId: string): Promise<T> {
+    return await this.request<T>('/api/apps/open', { app_id: appId })
+  }
+
   async launchApp(appId: string): Promise<void> {
     await this.request('/api/apps/launch', { appId })
   }

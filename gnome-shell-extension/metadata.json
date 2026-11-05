@@ -1,0 +1,7 @@
+{
+  "uuid": "omnideck-shell-bridge@omnideck.local",
+  "name": "OmniDeck Shell Bridge",
+  "description": "Exports exact GNOME window metadata and activation for OmniDeck.",
+  "shell-version": ["50"],
+  "version": 1
+}

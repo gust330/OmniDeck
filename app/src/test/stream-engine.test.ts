@@ -199,6 +199,23 @@ describe('StreamEngine', () => {
     expect(events).toContainEqual({ type: 'disconnected', data: { reason: 'data-channel-closed' } })
   })
 
+  it('opens an app atomically using its exact desktop ID and returns server metadata', async () => {
+    const metadata = { app_id: 'org.custom.CAD.desktop', running: true, focused: true }
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => metadata,
+    })
+    engine = new StreamEngine({ fetch: fetchMock as typeof fetch })
+    engine.configureEndpoint('https://host.test')
+
+    await expect(engine.openApp('org.custom.CAD.desktop')).resolves.toEqual(metadata)
+    expect(fetchMock).toHaveBeenCalledWith('https://host.test/api/apps/open', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ app_id: 'org.custom.CAD.desktop' }),
+    })
+  })
+
   it('closes every resource and emits one disconnect event', async () => {
     await engine.connect('wss://host.test', (event) => events.push(event))
     peer.channel.readyState = 'open'

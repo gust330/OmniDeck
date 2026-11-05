@@ -15,17 +15,6 @@ const Icon = ({ name, className = '' }: IconProps) => (
   </span>
 )
 
-const apps = [
-  { name: 'VS Code', icon: 'code', status: 'Active', gradient: 'from-sky-500 to-blue-700' },
-  { name: 'Chrome', icon: 'language', status: 'Active', gradient: 'from-red-500 via-amber-400 to-emerald-500' },
-  { name: 'zsh Terminal', icon: 'terminal', status: 'Active', gradient: 'from-zinc-500 to-zinc-950' },
-  { name: 'Blender', icon: 'view_in_ar', status: 'Idle', gradient: 'from-orange-400 to-orange-700' },
-  { name: 'Spotify', icon: 'graphic_eq', status: 'Active', gradient: 'from-emerald-400 to-green-700' },
-  { name: 'Steam', icon: 'sports_esports', status: 'Idle', gradient: 'from-slate-400 to-slate-800' },
-  { name: 'Discord', icon: 'forum', status: 'Idle', gradient: 'from-blue-400 to-indigo-600' },
-  { name: 'Docker', icon: 'deployed_code', status: 'Active', gradient: 'from-cyan-400 to-blue-600' },
-] as const
-
 const telemetryRings = [
   { key: 'cpu', label: 'CPU', radius: 40, color: '#0A84FF' },
   { key: 'gpu', label: 'GPU', radius: 30, color: '#30D158' },
@@ -288,40 +277,26 @@ export default function ControlCenter() {
           </div>
         </section>
 
-        <section className="ios-glass-subtle squircle-card p-5 xl:col-span-7" aria-labelledby="stage-manager-title">
-          <div className="mb-4 flex items-end justify-between gap-3">
-            <div>
-              <h2 id="stage-manager-title" className="text-lg font-semibold">Stage Manager</h2>
-              <p className="mt-1 text-sm text-white/50">Choose which desktop app takes over the phone.</p>
+        <section className="ios-glass-subtle squircle-card flex flex-col justify-between p-5 xl:col-span-7" aria-labelledby="stage-manager-title">
+          <div>
+            <div className="mb-4 flex items-end justify-between gap-3">
+              <div>
+                <h2 id="stage-manager-title" className="text-lg font-semibold">Stage Manager</h2>
+                <p className="mt-1 text-sm text-white/50">Choose which desktop app takes over the phone.</p>
+              </div>
             </div>
-            <span className="text-xs tabular-nums text-white/45">8 apps</span>
-          </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {apps.map((app) => (
-              <article key={app.name} className="rounded-2xl bg-white/[0.055] p-4 ring-1 ring-inset ring-white/[0.08]">
-                <div className="flex items-start gap-3">
-                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${app.gradient}`}>
-                    <Icon name={app.icon} className="text-[24px] text-white" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className="truncate text-sm font-semibold">{app.name}</h3>
-                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${app.status === 'Active' ? 'bg-emerald-400/15 text-emerald-300' : 'bg-white/[0.07] text-white/45'}`}>
-                        {app.status}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleChooseApp}
-                      className="mt-3 inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-white/[0.08] text-xs font-medium text-white/80 transition-colors hover:bg-white/[0.13]"
-                    >
-                      <Icon name="smartphone" className="text-[16px]" />
-                      Focus on Phone
-                    </button>
-                  </div>
-                </div>
-              </article>
-            ))}
+            <div className="rounded-2xl border border-dashed border-white/15 p-8 text-center">
+              <p className="text-sm text-white/60">Launch or focus an active window from the app library.</p>
+              <button
+                type="button"
+                onClick={handleChooseApp}
+                aria-label="Choose application"
+                className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-semibold text-black transition-transform active:scale-95"
+              >
+                <Icon name="apps" className="text-[20px]" />
+                Choose Application
+              </button>
+            </div>
           </div>
         </section>
       </div>

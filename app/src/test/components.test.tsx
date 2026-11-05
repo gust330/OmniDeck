@@ -8,11 +8,13 @@ import ControlCenter from '@/components/control-center/ControlCenter';
 import DockManager from '@/components/dock/DockManager';
 import SettingsModal from '@/components/settings/SettingsModal';
 import AppLibrary from '@/components/app-library/AppLibrary';
+import { StreamEngine } from '@/engines/stream-engine';
 import { useInputStore } from '@/stores/input-store';
 import { useConnectionStore } from '@/stores/connection-store';
 
 describe('UI Component Architecture (iPadOS 18 Liquid Glass)', () => {
   beforeEach(() => {
+    vi.restoreAllMocks();
     useInputStore.getState().clearAllModifiers();
     useConnectionStore.setState({
       status: 'connected',
@@ -118,23 +120,38 @@ describe('UI Component Architecture (iPadOS 18 Liquid Glass)', () => {
   });
 
   describe('AppLibrary', () => {
-    it('renders eight apps with status badges and focus actions', () => {
+    const mockApps = [
+      { id: 'vscode.desktop', name: 'VS Code', category: 'dev', running: true, subtitle: 'OmniDeck workspace' },
+      { id: 'terminal.desktop', name: 'zsh Terminal', category: 'dev', running: true, subtitle: '2 sessions' },
+      { id: 'docker.desktop', name: 'Docker', category: 'dev', running: true, subtitle: '6 containers' },
+      { id: 'blender.desktop', name: 'Blender', category: 'creative', running: false, subtitle: 'Scene ready' },
+    ];
+
+    it('renders server apps with status badges and open actions', async () => {
+      vi.spyOn(StreamEngine.prototype, 'listApps').mockResolvedValue(mockApps);
       render(<AppLibrary />);
       expect(screen.getByRole('heading', { name: 'App Library' })).toBeInTheDocument();
-      expect(screen.getAllByRole('article')).toHaveLength(8);
-      expect(screen.getAllByText('Focus on Phone')).toHaveLength(8);
+      expect(await screen.findAllByRole('article')).toHaveLength(4);
+      expect(screen.getAllByRole('button', { name: /Open .* on Phone/i })).toHaveLength(4);
       expect(screen.getAllByText('Active').length).toBeGreaterThan(0);
       expect(screen.getAllByText('Idle').length).toBeGreaterThan(0);
     });
 
-    it('returns to the stream after focusing an app', () => {
+    it('returns to the stream after opening an app', async () => {
+      vi.spyOn(StreamEngine.prototype, 'listApps').mockResolvedValue(mockApps);
+      const openSpy = vi.spyOn(StreamEngine.prototype, 'openApp').mockResolvedValue({ running: true });
       render(<AppLibrary />);
-      fireEvent.click(screen.getAllByText('Focus on Phone')[0]);
+      const buttons = await screen.findAllByRole('button', { name: /Open .* on Phone/i });
+      fireEvent.click(buttons[0]);
+      await vi.waitFor(() => expect(openSpy).toHaveBeenCalledWith('vscode.desktop'));
       expect(useConnectionStore.getState().activeView).toBe('stream');
     });
 
-    it('filters apps by category and search query', () => {
+    it('filters apps by category and search query', async () => {
+      vi.spyOn(StreamEngine.prototype, 'listApps').mockResolvedValue(mockApps);
       render(<AppLibrary />);
+      await screen.findByText('VS Code');
+
       // Filter by Dev
       fireEvent.click(screen.getByRole('button', { name: 'Dev' }));
       expect(screen.getByText('VS Code')).toBeInTheDocument();
@@ -161,14 +178,12 @@ describe('UI Component Architecture (iPadOS 18 Liquid Glass)', () => {
   });
 
   describe('ControlCenter', () => {
-    it('renders volume & brightness tactile sliders, host header, and Stage Manager app tiles', () => {
+    it('renders volume & brightness tactile sliders, host header, and Stage Manager chooser', () => {
       render(<ControlCenter />);
       expect(screen.getByText('Control Center')).toBeInTheDocument();
       expect(screen.getByText(/75%/i)).toBeInTheDocument(); // Volume
       expect(screen.getByText(/85%/i)).toBeInTheDocument(); // Brightness
-      expect(screen.getByText('VS Code')).toBeInTheDocument();
-      expect(screen.getByText('Chrome')).toBeInTheDocument();
-      expect(screen.getByText('Blender')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Choose application' })).toBeInTheDocument();
     });
   });
 

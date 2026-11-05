@@ -1,20 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { Icon } from '@/components/shared/Icon'
 import { StreamEngine } from '@/engines/stream-engine'
 import { useConnectionStore } from '@/stores/connection-store'
 import type { AppCategory, RemoteApp } from '@/types'
-
-export const defaultApps: RemoteApp[] = [
-  { id: 'vscode', name: 'VS Code', icon: 'code', category: 'dev', status: 'active', subtitle: 'OmniDeck workspace' },
-  { id: 'chrome', name: 'Chrome', icon: 'language', category: 'web', status: 'active', subtitle: '12 tabs' },
-  { id: 'terminal', name: 'zsh Terminal', icon: 'terminal', category: 'dev', status: 'active', subtitle: '2 sessions' },
-  { id: 'blender', name: 'Blender', icon: 'view_in_ar', category: 'creative', status: 'idle', subtitle: 'Scene ready' },
-  { id: 'spotify', name: 'Spotify', icon: 'graphic_eq', category: 'media', status: 'active', subtitle: 'Get Lucky' },
-  { id: 'steam', name: 'Steam', icon: 'sports_esports', category: 'gaming', status: 'idle', subtitle: 'Library' },
-  { id: 'discord', name: 'Discord', icon: 'forum', category: 'media', status: 'idle', subtitle: '3 unread' },
-  { id: 'docker', name: 'Docker', icon: 'deployed_code', category: 'dev', status: 'active', subtitle: '6 containers' },
-]
 
 const categoryOptions: Array<{ label: string; value: 'all' | AppCategory }> = [
   { label: 'All Apps', value: 'all' },
@@ -46,33 +35,46 @@ export default function AppLibrary() {
   const { hostConfig, setActiveView, toggleSettings } = useConnectionStore()
   const [category, setCategory] = useState<'all' | AppCategory>('all')
   const [query, setQuery] = useState('')
-  const [apps, setApps] = useState<RemoteApp[]>(defaultApps)
+  const [apps, setApps] = useState<RemoteApp[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [openingAppId, setOpeningAppId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const requestGeneration = useRef(0)
 
   useEffect(() => {
-    let active = true
+    const generation = ++requestGeneration.current
     const engine = createApiClient(hostConfig.url)
+    setApps([])
+    setIsLoading(true)
+    setError(null)
+    setOpeningAppId(null)
     void engine.listApps()
       .then((remoteApps) => {
-        if (!active || !Array.isArray(remoteApps) || remoteApps.length === 0) return
-        const mapped = remoteApps.map((item, index) => {
+        if (generation !== requestGeneration.current || !Array.isArray(remoteApps)) return
+        const mapped = remoteApps.flatMap((item) => {
           const raw = item as DiscoveredApp
+          if (typeof raw.id !== 'string' || raw.id.length === 0) return []
           const isRunning = typeof raw.running === 'boolean' ? raw.running : raw.status === 'active'
-          return {
-            id: raw.id ?? `app-${index}.desktop`,
-            name: raw.name ?? 'Remote Application',
+          return [{
+            id: raw.id,
+            name: raw.name ?? raw.id,
             icon: raw.icon ?? 'terminal',
             category: (raw.category ?? 'dev') as AppCategory,
             status: (isRunning ? 'active' : 'idle') as 'active' | 'idle',
             subtitle: raw.subtitle ?? (isRunning ? 'Running' : 'Ready'),
-          }
+          }]
         })
         setApps(mapped)
       })
-      .catch(() => {
-        // Disconnected mock fallback: keep defaultApps
+      .catch((cause: unknown) => {
+        if (generation !== requestGeneration.current) return
+        setError(cause instanceof Error ? cause.message : 'Unable to load applications.')
+      })
+      .finally(() => {
+        if (generation === requestGeneration.current) setIsLoading(false)
       })
     return () => {
-      active = false
+      requestGeneration.current += 1
     }
   }, [hostConfig.url])
 
@@ -85,14 +87,18 @@ export default function AppLibrary() {
     })
   }, [apps, category, query])
 
-  const focusApp = (appId: string) => {
-    const target = apps.find((item) => item.id === appId)
+  const openApp = async (appId: string) => {
     const engine = createApiClient(hostConfig.url)
-    if (target && target.status === 'idle') {
-      void engine.launchApp(appId).catch(() => {})
+    setOpeningAppId(appId)
+    setError(null)
+    try {
+      await engine.openApp(appId)
+      setActiveView('stream')
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to open application.')
+    } finally {
+      setOpeningAppId(null)
     }
-    void engine.focusApp(appId).catch(() => {})
-    setActiveView('stream')
   }
 
   const switchStreamToFullDesktop = () => {
@@ -175,7 +181,16 @@ export default function AppLibrary() {
           <span aria-live="polite" className="text-xs tabular-nums text-white/45">{visibleApps.length} apps</span>
         </div>
 
-        {visibleApps.length > 0 ? (
+        {error && (
+          <p role="alert" className="mb-3 rounded-xl bg-apple-red/15 px-3 py-2 text-sm text-apple-red">
+            {error}
+          </p>
+        )}
+        {isLoading ? (
+          <div className="rounded-[18px] border border-dashed border-white/15 px-4 py-8 text-center text-sm text-white/50">
+            Loading applications…
+          </div>
+        ) : visibleApps.length > 0 ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {visibleApps.map((app) => (
               <article key={app.id} className="ios-glass-subtle rounded-[18px] p-4">
@@ -199,12 +214,13 @@ export default function AppLibrary() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => focusApp(app.id)}
-                  aria-label={`Focus ${app.name} on Phone`}
-                  className="mt-4 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-xl bg-white/[0.09] text-xs font-semibold text-white/85 transition-colors hover:bg-white/[0.15] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-apple-blue"
+                  disabled={openingAppId !== null}
+                  onClick={() => void openApp(app.id)}
+                  aria-label={`Open ${app.name} on Phone`}
+                  className="mt-4 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-xl bg-white/[0.09] text-xs font-semibold text-white/85 transition-colors hover:bg-white/[0.15] disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-apple-blue"
                 >
                   <Icon name="smartphone" size={17} />
-                  Focus on Phone
+                  {openingAppId === app.id ? 'Opening…' : 'Open on Phone'}
                 </button>
               </article>
             ))}

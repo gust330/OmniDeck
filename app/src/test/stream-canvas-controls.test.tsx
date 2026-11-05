@@ -148,8 +148,7 @@ describe('StreamCanvas & Host Controls Integration', () => {
     const listAppsSpy = vi.spyOn(StreamEngine.prototype, 'listApps').mockResolvedValue([
       { id: 'org.custom.CAD.desktop', name: 'Custom CAD', running: false },
     ])
-    const launchAppSpy = vi.spyOn(StreamEngine.prototype, 'launchApp').mockResolvedValue()
-    const focusAppSpy = vi.spyOn(StreamEngine.prototype, 'focusApp').mockResolvedValue()
+    const openAppSpy = vi.spyOn(StreamEngine.prototype, 'openApp').mockResolvedValue({ running: true })
 
     const control = render(<ControlCenter />)
     fireEvent.change(screen.getByRole('slider', { name: 'Volume' }), { target: { value: '45' } })
@@ -170,11 +169,10 @@ describe('StreamCanvas & Host Controls Integration', () => {
 
     render(<AppLibrary />)
     expect(listAppsSpy).toHaveBeenCalled()
-    const focusBtn = await screen.findByRole('button', { name: 'Focus Custom CAD on Phone' })
+    const openBtn = await screen.findByRole('button', { name: 'Open Custom CAD on Phone' })
     expect(screen.getByText('Idle')).toBeInTheDocument()
-    fireEvent.click(focusBtn)
-    await vi.waitFor(() => expect(launchAppSpy).toHaveBeenCalledWith('org.custom.CAD.desktop'))
-    expect(focusAppSpy).toHaveBeenCalledWith('org.custom.CAD.desktop')
+    fireEvent.click(openBtn)
+    await vi.waitFor(() => expect(openAppSpy).toHaveBeenCalledWith('org.custom.CAD.desktop'))
     expect(configureEndpointSpy).toHaveBeenCalledWith('http://192.168.1.100:8080')
     expect(connectSpy).not.toHaveBeenCalled()
 

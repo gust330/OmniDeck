@@ -3,7 +3,48 @@ from pathlib import Path
 
 import pytest
 
-from omnideck.backend import LinuxBackend
+from omnideck.backend import GnomeShellBridge, LinuxBackend
+
+
+def test_gnome_shell_bridge_calls_dbus_and_parses_json(monkeypatch):
+    bridge = GnomeShellBridge()
+    commands = []
+
+    class DummyCompleted:
+        returncode = 0
+        stdout = "('\"[{\\\\\"appId\\\\\": \\\\\"terminal.desktop\\\\\", \\\\\"focused\\\\\": true, \\\\\"bbox\\\\\": {\\\\\"x\\\\\": 10, \\\\\"y\\\\\": 20, \\\\\"width\\\\\": 800, \\\\\"height\\\\\": 600}}]\"',)\n"
+
+    def fake_run(cmd, **kw):
+        commands.append(cmd)
+        return DummyCompleted()
+
+    monkeypatch.setattr("omnideck.backend.subprocess.run", fake_run)
+
+    windows = bridge.list_windows()
+
+    assert commands[0] == [
+        "gdbus", "call", "--session", "--dest", "io.github.omnideck.ShellBridge",
+        "--object-path", "/io/github/omnideck/ShellBridge",
+        "--method", "io.github.omnideck.ShellBridge.ListWindows",
+    ]
+    assert windows == [{
+        "appId": "terminal.desktop",
+        "focused": True,
+        "bbox": {"x": 10, "y": 20, "width": 800, "height": 600},
+    }]
+
+
+def test_gnome_shell_bridge_raises_on_error(monkeypatch):
+    bridge = GnomeShellBridge()
+
+    class DummyFailed:
+        returncode = 1
+        stderr = "Error connecting: org.freedesktop.DBus.Error.ServiceUnknown\n"
+
+    monkeypatch.setattr("omnideck.backend.subprocess.run", lambda *a, **kw: DummyFailed())
+
+    with pytest.raises(RuntimeError, match="Error connecting"):
+        bridge.list_windows()
 
 
 def test_desktop_files_are_parsed_and_deduplicated(tmp_path):
@@ -20,6 +61,115 @@ def test_desktop_files_are_parsed_and_deduplicated(tmp_path):
     apps = backend.list_apps()
 
     assert apps == [{"id": "code.desktop", "name": "Visual Studio Code", "running": False}]
+
+
+def test_focus_app_uses_shell_bridge_and_surfaces_missing_window(tmp_path):
+    apps_dir = tmp_path / "applications"
+    apps_dir.mkdir()
+    (apps_dir / "code.desktop").write_text(
+        "[Desktop Entry]\nName=Code\nExec=code\nType=Application\n"
+    )
+
+    class Bridge:
+        def activate(self, app_id):
+            assert app_id == "code.desktop"
+            return {"appId": app_id, "bbox": {"x": 1, "y": 2, "width": 3, "height": 4}}
+
+    backend = LinuxBackend(app_dirs=[apps_dir], shell_bridge=Bridge())
+
+    assert backend.focus_app("code.desktop")["appId"] == "code.desktop"
+    assert backend.crop_enabled is True
+
+
+def test_open_app_activates_existing_exact_desktop_window_and_enables_crop(tmp_path):
+    apps_dir = tmp_path / "applications"
+    apps_dir.mkdir()
+    (apps_dir / "code.desktop").write_text(
+        "[Desktop Entry]\nName=Code\nExec=code\nType=Application\n"
+    )
+
+    class Bridge:
+        def __init__(self):
+            self.activated = []
+
+        def list_windows(self):
+            return [
+                {"appId": "code-insiders.desktop", "title": "Wrong", "bbox": {"x": 0, "y": 0, "width": 20, "height": 20}},
+                {"appId": "code.desktop", "title": "Project", "bbox": {"x": 11, "y": 22, "width": 900, "height": 700}},
+            ]
+
+        def activate(self, app_id):
+            self.activated.append(app_id)
+            return self.list_windows()[1]
+
+    bridge = Bridge()
+    backend = LinuxBackend(app_dirs=[apps_dir], shell_bridge=bridge)
+
+    result = backend.open_app("code.desktop", timeout=0)
+
+    assert bridge.activated == ["code.desktop"]
+    assert backend.crop_enabled is True
+    assert result == {
+        "appId": "code.desktop",
+        "title": "Project",
+        "bbox": {"x": 11, "y": 22, "width": 900, "height": 700},
+        "launched": False,
+    }
+
+
+def test_open_app_launches_then_waits_for_exact_window(tmp_path, monkeypatch):
+    apps_dir = tmp_path / "applications"
+    apps_dir.mkdir()
+    (apps_dir / "terminal.desktop").write_text(
+        "[Desktop Entry]\nName=Terminal\nExec=gnome-terminal\nType=Application\n"
+    )
+    calls = []
+
+    class Bridge:
+        def __init__(self):
+            self.poll = 0
+
+        def list_windows(self):
+            self.poll += 1
+            if self.poll < 3:
+                return []
+            return [{"appId": "terminal.desktop", "title": "Terminal", "bbox": {"x": 4, "y": 5, "width": 800, "height": 600}}]
+
+        def activate(self, app_id):
+            calls.append(("activate", app_id))
+            return self.list_windows()[0]
+
+    monkeypatch.setattr("omnideck.backend.subprocess.Popen", lambda argv, **kw: calls.append(("launch", argv)))
+    monkeypatch.setattr("omnideck.backend.time.sleep", lambda _: None)
+    backend = LinuxBackend(app_dirs=[apps_dir], shell_bridge=Bridge())
+
+    result = backend.open_app("terminal.desktop", timeout=1, poll_interval=0)
+
+    assert calls == [("launch", ["gtk-launch", "terminal"]), ("activate", "terminal.desktop")]
+    assert result["launched"] is True
+    assert result["bbox"]["width"] == 800
+
+
+def test_open_app_raises_timeout_if_window_does_not_appear(tmp_path, monkeypatch):
+    apps_dir = tmp_path / "applications"
+    apps_dir.mkdir()
+    (apps_dir / "terminal.desktop").write_text(
+        "[Desktop Entry]\nName=Terminal\nExec=gnome-terminal\nType=Application\n"
+    )
+
+    class Bridge:
+        def list_windows(self):
+            return []
+
+        def activate(self, app_id):
+            return None
+
+    monkeypatch.setattr("omnideck.backend.subprocess.Popen", lambda argv, **kw: None)
+    monkeypatch.setattr("omnideck.backend.time.sleep", lambda _: None)
+    backend = LinuxBackend(app_dirs=[apps_dir], shell_bridge=Bridge())
+
+    with pytest.raises(TimeoutError, match="Window for terminal.desktop did not appear"):
+        backend.open_app("terminal.desktop", timeout=0.1, poll_interval=0.01)
 
 
 def test_launch_uses_validated_desktop_id_without_shell(tmp_path, monkeypatch):

@@ -13,6 +13,7 @@ class FakeSystemBackend:
         self.frame = b"\xff\xd8fake-frame\xff\xd9"
         self.telemetry = {"fps": 60, "ping": 2.0}
         self.inputs = []
+        self.crop_enabled = False
         self.status = {
             "status": "ok",
             "host": self.host,
@@ -37,6 +38,16 @@ class FakeSystemBackend:
 
     def focus_app(self, app_id):
         self.actions.append(("focus", app_id))
+
+    def open_app(self, app_id):
+        self.actions.append(("open", app_id))
+        self.crop_enabled = True
+        return {
+            "appId": app_id,
+            "title": "Code",
+            "bbox": {"x": 10, "y": 20, "width": 800, "height": 600},
+            "launched": True,
+        }
 
     def set_volume(self, level):
         self.volume = level

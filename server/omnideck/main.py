@@ -36,6 +36,14 @@ class LaunchRequest(BaseModel):
         return self.appId or self.app_id
 
 
+class OpenAppRequest(BaseModel):
+    appId: str | None = None
+    app_id: str | None = None
+
+    def target_app(self) -> str | None:
+        return self.appId or self.app_id
+
+
 class CropRequest(BaseModel):
     enabled: bool
 
@@ -93,6 +101,43 @@ def create_app(
         require_app(app_id)
         backend.launch_app(app_id)
         return {"ok": True, "action": "launch", "app_id": app_id}
+
+    @app.post("/apps/{app_id}/open")
+    async def open_app_path(app_id: str):
+        require_app(app_id)
+        try:
+            window_meta = await asyncio.to_thread(backend.open_app, app_id)
+            return {
+                "ok": True,
+                "action": "open",
+                "app_id": app_id,
+                "crop": True,
+                "window": window_meta,
+            }
+        except TimeoutError as exc:
+            raise HTTPException(status_code=504, detail=str(exc))
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=str(exc))
+
+    @app.post("/api/apps/open")
+    async def open_app_body(request: OpenAppRequest):
+        target = request.target_app()
+        if not target:
+            raise HTTPException(status_code=400, detail="appId or app_id required")
+        require_app(target)
+        try:
+            window_meta = await asyncio.to_thread(backend.open_app, target)
+            return {
+                "ok": True,
+                "action": "open",
+                "app_id": target,
+                "crop": True,
+                "window": window_meta,
+            }
+        except TimeoutError as exc:
+            raise HTTPException(status_code=504, detail=str(exc))
+        except Exception as exc:
+            raise HTTPException(status_code=500, detail=str(exc))
 
     @app.post("/api/apps/launch")
     async def api_apps_launch(request: LaunchRequest):

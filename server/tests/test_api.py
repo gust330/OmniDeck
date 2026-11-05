@@ -118,6 +118,46 @@ def test_exact_host_api_routes_validate_input_safely(fake_backend):
     assert client.post("/api/system/power", json={"action": "explode"}).status_code == 422
 
 
+def test_open_app_endpoint_validates_app_id(fake_backend):
+    fake_backend.apps = [{"id": "code.desktop", "name": "Code", "running": False}]
+    client = TestClient(create_app(fake_backend))
+
+    # Missing appId
+    assert client.post("/api/apps/open", json={}).status_code == 400
+    # Unknown appId
+    assert client.post("/api/apps/open", json={"appId": "unknown.desktop"}).status_code == 404
+
+
+def test_open_app_endpoint_atomically_opens_crops_and_returns_metadata(fake_backend):
+    fake_backend.apps = [{"id": "code.desktop", "name": "Code", "running": False}]
+    client = TestClient(create_app(fake_backend))
+
+    response = client.post("/api/apps/open", json={"appId": "code.desktop"})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ok"] is True
+    assert data["action"] == "open"
+    assert data["app_id"] == "code.desktop"
+    assert data["crop"] is True
+    assert data["window"]["appId"] == "code.desktop"
+    assert data["window"]["bbox"] == {"x": 10, "y": 20, "width": 800, "height": 600}
+    assert fake_backend.actions == [("open", "code.desktop")]
+    assert fake_backend.crop_enabled is True
+
+
+def test_open_app_endpoint_surfaces_errors(fake_backend):
+    fake_backend.apps = [{"id": "code.desktop", "name": "Code", "running": False}]
+    def fail_timeout(app_id):
+        raise TimeoutError("Window for code.desktop did not appear")
+    fake_backend.open_app = fail_timeout
+    client = TestClient(create_app(fake_backend))
+
+    resp = client.post("/api/apps/open", json={"appId": "code.desktop"})
+    assert resp.status_code == 504
+    assert "Window for code.desktop did not appear" in resp.json()["detail"]
+
+
 def test_cors_headers_are_present(fake_backend):
     client = TestClient(create_app(fake_backend))
     response = client.options("/status", headers={"Origin": "http://localhost:5173", "Access-Control-Request-Method": "GET"})

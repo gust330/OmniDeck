@@ -27,11 +27,45 @@ except ImportError:  # Minimal installs still serve fallback telemetry.
 DEFAULT_CUA = Path("/home/gustavo/.hermes/tools/cua-driver-0.21.0-linux-x64/cua-driver")
 
 
+class GnomeShellBridge:
+    """Narrow client for the OmniDeck GNOME Shell extension."""
+
+    BUS_NAME = "io.github.omnideck.ShellBridge"
+    OBJECT_PATH = "/io/github/omnideck/ShellBridge"
+    INTERFACE = BUS_NAME
+
+    def _call(self, method: str, *args: str):
+        command = [
+            "gdbus", "call", "--session", "--dest", self.BUS_NAME,
+            "--object-path", self.OBJECT_PATH, "--method", f"{self.INTERFACE}.{method}",
+            *args,
+        ]
+        result = subprocess.run(command, check=False, capture_output=True, text=True, timeout=3, shell=False)
+        if result.returncode != 0:
+            raise RuntimeError(result.stderr.strip() or "GNOME Shell bridge is unavailable")
+        # gdbus prints a one-element tuple containing a quoted JSON string.
+        import ast
+        values = ast.literal_eval(result.stdout.strip())
+        payload = values[0]
+        parsed = json.loads(payload)
+        if isinstance(parsed, str):
+            parsed = json.loads(parsed)
+        return parsed
+
+    def list_windows(self):
+        return self._call("ListWindows")
+
+    def activate(self, app_id: str):
+        return self._call("Activate", app_id)
+
+
 class LinuxBackend:
-    def __init__(self, app_dirs=None, cua_driver: Path | None = None):
+    def __init__(self, app_dirs=None, cua_driver: Path | None = None, shell_bridge=None):
         self.app_dirs = [Path(p) for p in (app_dirs or self._default_app_dirs())]
         self.cua_driver = Path(cua_driver or os.environ.get("OMNIDECK_CUA_DRIVER", DEFAULT_CUA))
         self.crop_enabled = False
+        self.shell_bridge = shell_bridge or GnomeShellBridge()
+        self._active_window = None
         self._cursor = [0.0, 0.0]
         self._last_frame_at = 0.0
         self._frame_rect = (0, 0, 1920, 1080)
@@ -82,8 +116,18 @@ class LinuxBackend:
         raise json.JSONDecodeError("No JSON object in command output", output, 0)
 
     def get_active_window(self):
-        """Return best-effort focused-window geometry in desktop coordinates."""
+        """Return focused-window geometry, preferring the Shell bridge."""
         empty = {"title": "", "appId": None, "bbox": None}
+        try:
+            windows = self.shell_bridge.list_windows()
+            focused = next((item for item in windows if item.get("focused")), None)
+            if focused:
+                self._active_window = focused
+                return focused
+        except Exception:
+            pass
+        if self._active_window:
+            return self._active_window
         if not self.cua_driver.is_file():
             return empty
         try:
@@ -167,14 +211,66 @@ class LinuxBackend:
         if not any(app["id"] == app_id for app in self.list_apps()):
             raise ValueError("Unknown desktop application")
 
+    def _match_app(self, target: str, candidate: str | None) -> bool:
+        return candidate == target
+
+    def open_app(self, app_id: str, timeout: float = 5.0, poll_interval: float = 0.2):
+        self._known_app(app_id)
+        existing = []
+        try:
+            existing = self.shell_bridge.list_windows()
+        except Exception:
+            pass
+
+        target_window = next((w for w in existing if self._match_app(app_id, w.get("appId"))), None)
+        if target_window:
+            activated = self.shell_bridge.activate(app_id)
+            meta = activated or target_window
+            self.crop_enabled = True
+            self._active_window = meta
+            return {**meta, "launched": False}
+
+        self.launch_app(app_id)
+        deadline = time.monotonic() + timeout
+        while time.monotonic() <= deadline:
+            time.sleep(poll_interval)
+            try:
+                windows = self.shell_bridge.list_windows()
+                found = next((w for w in windows if self._match_app(app_id, w.get("appId"))), None)
+                if found:
+                    activated = self.shell_bridge.activate(app_id)
+                    meta = activated or found
+                    self.crop_enabled = True
+                    self._active_window = meta
+                    return {**meta, "launched": True}
+            except Exception as exc:
+                if isinstance(exc, (TimeoutError,)):
+                    raise
+                pass
+
+        raise TimeoutError(f"Window for {app_id} did not appear within {timeout}s")
+
     def launch_app(self, app_id: str):
         self._known_app(app_id)
         subprocess.Popen(["gtk-launch", app_id.removesuffix(".desktop")], shell=False, start_new_session=True)
 
     def focus_app(self, app_id: str):
         self._known_app(app_id)
-        # cua-driver chooses the matching live window without shell interpolation.
-        self._cua("bring_to_front", {"app": app_id.removesuffix(".desktop")})
+        if hasattr(self.shell_bridge, "activate"):
+            try:
+                activated = self.shell_bridge.activate(app_id)
+                if activated:
+                    self.crop_enabled = True
+                    self._active_window = activated
+                    return activated
+            except Exception:
+                pass
+        cua_ok = self._cua("bring_to_front", {"app": app_id.removesuffix(".desktop")})
+        if cua_ok:
+            self.crop_enabled = True
+            active = self.get_active_window()
+            return active or {"appId": app_id}
+        return {"appId": app_id}
 
     def set_volume(self, level: int):
         level = max(0, min(100, int(level)))
