@@ -16,7 +16,10 @@ export function StreamWorkspace() {
   const canvasRef = useRef<HTMLDivElement>(null)
   const inputEngineRef = useRef<InputEngine | null>(null)
   const streamEngineRef = useRef<StreamEngine | null>(null)
+  const reconnectRef = useRef<() => void>(() => {})
+  const disconnectRef = useRef<() => void>(() => {})
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null)
+  const [frame, setFrame] = useState<Blob | null>(null)
   const [frameUrl, setFrameUrl] = useState<string | null>(null)
 
   const hostUrl = useConnectionStore((state) => state.hostConfig.url)
@@ -39,14 +42,19 @@ export function StreamWorkspace() {
         case 'disconnected':
           setStatus('disconnected')
           setRemoteStream(null)
+          setFrame(null)
           setFrameUrl(null)
           break
         case 'remote-stream':
           setRemoteStream((event.data as MediaStream) ?? null)
           break
         case 'frame':
-          if (typeof event.data === 'string') {
+          if (typeof Blob !== 'undefined' && event.data instanceof Blob) {
+            setFrame(event.data)
+            setFrameUrl(null)
+          } else if (typeof event.data === 'string') {
             setFrameUrl(event.data)
+            setFrame(null)
           }
           break
         case 'telemetry':
@@ -64,7 +72,20 @@ export function StreamWorkspace() {
       }
     }
 
-    void streamEngine.connect(hostUrl, handleStreamEvent)
+    const connectStream = () => {
+      void streamEngine.connect(hostUrl, handleStreamEvent)
+    }
+
+    const disconnectStream = () => {
+      streamEngine.disconnect()
+      setRemoteStream(null)
+      setFrame(null)
+      setFrameUrl(null)
+    }
+
+    reconnectRef.current = connectStream
+    disconnectRef.current = disconnectStream
+    connectStream()
 
     const inputEngine = new InputEngine()
     inputEngineRef.current = inputEngine
@@ -89,14 +110,23 @@ export function StreamWorkspace() {
       streamEngine.disconnect()
       streamEngineRef.current = null
       setRemoteStream(null)
+      setFrame(null)
       setFrameUrl(null)
     }
   }, [hostUrl, moveCursor, setStatus, updateTelemetry])
 
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-canvas text-white">
-      <StreamCanvas canvasRef={canvasRef} remoteStream={remoteStream} frameUrl={frameUrl} />
-      <DynamicIslandHUD />
+      <StreamCanvas
+        canvasRef={canvasRef}
+        remoteStream={remoteStream}
+        frame={frame}
+        frameUrl={frameUrl}
+      />
+      <DynamicIslandHUD
+        onDisconnect={() => disconnectRef.current()}
+        onReconnect={() => reconnectRef.current()}
+      />
       <div className="pointer-events-none absolute inset-x-5 top-1/2 z-20 flex -translate-y-1/2 items-center justify-between">
         <ModifierRibbon />
         <ActionPod

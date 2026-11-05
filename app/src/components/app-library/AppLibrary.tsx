@@ -86,8 +86,18 @@ export default function AppLibrary() {
   }, [apps, category, query])
 
   const focusApp = (appId: string) => {
+    const target = apps.find((item) => item.id === appId)
     const engine = createApiClient(hostConfig.url)
+    if (target && target.status === 'idle') {
+      void engine.launchApp(appId).catch(() => {})
+    }
     void engine.focusApp(appId).catch(() => {})
+    setActiveView('stream')
+  }
+
+  const switchStreamToFullDesktop = () => {
+    const engine = createApiClient(hostConfig.url)
+    void engine.setCrop(false).catch(() => {})
     setActiveView('stream')
   }
 
@@ -99,6 +109,15 @@ export default function AppLibrary() {
           <p className="mt-1 text-sm text-white/50">Stage Manager on {hostConfig.name} · choose one window for the phone.</p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Switch to full desktop stream"
+            onClick={switchStreamToFullDesktop}
+            className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white/10 px-3.5 text-xs font-semibold text-white/85 transition hover:bg-white/20"
+          >
+            <Icon name="fullscreen" size={18} />
+            Full Desktop
+          </button>
           <button
             type="button"
             aria-label="Open settings"

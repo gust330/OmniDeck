@@ -5,3 +5,4 @@ pillow>=10.0.0
 psutil>=6.0.0
 pytest>=8.0.0
 httpx>=0.27.0
+asyncvnc>=1.3.0

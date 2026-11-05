@@ -161,6 +161,20 @@ describe('StreamWorkspace Integration', () => {
     unmount()
   })
 
+  it('disconnects and reconnects the stream from workspace controls', () => {
+    useConnectionStore.setState({ status: 'connected' })
+    const connectSpy = vi.spyOn(StreamEngine.prototype, 'connect')
+    const disconnectSpy = vi.spyOn(StreamEngine.prototype, 'disconnect')
+    render(<StreamWorkspace />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Disconnect' }))
+    expect(disconnectSpy).toHaveBeenCalled()
+    expect(useConnectionStore.getState().status).toBe('disconnected')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reconnect' }))
+    expect(connectSpy).toHaveBeenCalledTimes(2)
+  })
+
   it('disconnects StreamEngine and cleans up listeners on unmount', () => {
     const disconnectSpy = vi.spyOn(StreamEngine.prototype, 'disconnect')
     const { unmount } = render(<StreamWorkspace />)

@@ -9,6 +9,7 @@ class InputCommand(BaseModel):
         "mouse-scroll",
         "key-down",
         "key-up",
+        "text",
         "gamepad",
     ]
     payload: dict[str, Any] = Field(default_factory=dict)

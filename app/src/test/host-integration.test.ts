@@ -39,23 +39,27 @@ describe('host-server integration', () => {
     })
   })
 
-  it('receives binary JPEG frames and JSON telemetry on the host websocket', async () => {
+  it('passes binary JPEG frames directly to the renderer without object-URL churn', async () => {
     const events: Array<{ type: string; data?: unknown }> = []
+    const createObjectURL = vi.fn(() => 'blob:frame-1')
     const engine = new StreamEngine({
       createWebSocket: () => socket as unknown as WebSocket,
       fetch: fetchMock,
-      createObjectURL: vi.fn(() => 'blob:frame-1'),
+      createObjectURL,
       revokeObjectURL: vi.fn(),
     })
 
     await engine.connect('http://rig.local:9090', (event) => events.push(event))
-    expect(socket.binaryType).toBe('blob')
+    expect(socket.binaryType).toBe('arraybuffer')
     socket.readyState = HostSocket.OPEN
     socket.onopen?.()
-    socket.onmessage?.({ data: new Blob(['jpeg'], { type: 'image/jpeg' }) } as MessageEvent)
+    const frame = new ArrayBuffer(4)
+    socket.onmessage?.({ data: frame } as MessageEvent)
     socket.onmessage?.({ data: JSON.stringify({ type: 'telemetry', data: { fps: 60, ping: 8 } }) } as MessageEvent)
 
-    expect(events).toContainEqual({ type: 'frame', data: 'blob:frame-1' })
+    expect(events).toContainEqual({ type: 'frame', data: expect.any(Blob) })
+    expect((events.find((event) => event.type === 'frame')?.data as Blob).type).toBe('image/jpeg')
+    expect(createObjectURL).not.toHaveBeenCalled()
     expect(events).toContainEqual({ type: 'telemetry', data: { fps: 60, ping: 8 } })
   })
 
@@ -77,6 +81,7 @@ describe('host-server integration', () => {
     engine.configureEndpoint('http://rig.local:8080')
 
     await engine.listApps()
+    await engine.launchApp('code.desktop')
     await engine.focusApp('code.desktop')
     await engine.setVolume(42)
     await engine.setPower('restart')
@@ -85,11 +90,12 @@ describe('host-server integration', () => {
 
     expect(createWebSocket).not.toHaveBeenCalled()
     expect(fetchMock).toHaveBeenNthCalledWith(1, 'http://rig.local:8080/api/apps', expect.objectContaining({ method: 'GET' }))
-    expect(fetchMock).toHaveBeenNthCalledWith(2, 'http://rig.local:8080/api/focus', expect.objectContaining({ body: '{"appId":"code.desktop"}' }))
-    expect(fetchMock).toHaveBeenNthCalledWith(3, 'http://rig.local:8080/api/volume', expect.objectContaining({ body: '{"volume":42}' }))
-    expect(fetchMock).toHaveBeenNthCalledWith(4, 'http://rig.local:8080/api/power', expect.objectContaining({ body: '{"action":"reboot"}' }))
-    expect(fetchMock).toHaveBeenNthCalledWith(5, 'http://rig.local:8080/api/power', expect.objectContaining({ body: '{"action":"lock"}' }))
-    expect(fetchMock).toHaveBeenNthCalledWith(6, 'http://rig.local:8080/api/crop', expect.objectContaining({ body: '{"enabled":true}' }))
+    expect(fetchMock).toHaveBeenNthCalledWith(2, 'http://rig.local:8080/api/apps/launch', expect.objectContaining({ body: '{"appId":"code.desktop"}' }))
+    expect(fetchMock).toHaveBeenNthCalledWith(3, 'http://rig.local:8080/api/focus', expect.objectContaining({ body: '{"appId":"code.desktop"}' }))
+    expect(fetchMock).toHaveBeenNthCalledWith(4, 'http://rig.local:8080/api/volume', expect.objectContaining({ body: '{"volume":42}' }))
+    expect(fetchMock).toHaveBeenNthCalledWith(5, 'http://rig.local:8080/api/power', expect.objectContaining({ body: '{"action":"reboot"}' }))
+    expect(fetchMock).toHaveBeenNthCalledWith(6, 'http://rig.local:8080/api/power', expect.objectContaining({ body: '{"action":"lock"}' }))
+    expect(fetchMock).toHaveBeenNthCalledWith(7, 'http://rig.local:8080/api/crop', expect.objectContaining({ body: '{"enabled":true}' }))
   })
 
   it('emits disconnected and clears connection state when the host socket closes', async () => {

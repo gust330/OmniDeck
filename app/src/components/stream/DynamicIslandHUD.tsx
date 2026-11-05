@@ -10,11 +10,26 @@ const inputModes: Array<{ mode: InputMode; label: string; icon: string }> = [
   { mode: 'gamepad', label: 'Gamepad', icon: 'sports_esports' },
 ]
 
-export function DynamicIslandHUD() {
+export interface DynamicIslandHUDProps {
+  onReconnect?: () => void
+  onDisconnect?: () => void
+}
+
+export function DynamicIslandHUD({ onReconnect, onDisconnect }: DynamicIslandHUDProps = {}) {
   const { fps, ping } = useTelemetryStore()
   const { inputMode, setInputMode } = useInputStore()
   const { status, hostConfig, setStatus, toggleSettings } = useConnectionStore()
   const connected = status === 'connected'
+
+  const handleToggleConnection = () => {
+    if (connected) {
+      setStatus('disconnected')
+      onDisconnect?.()
+    } else {
+      setStatus('connecting')
+      onReconnect?.()
+    }
+  }
 
   return (
     <header className="pointer-events-auto absolute left-1/2 top-5 z-30 flex -translate-x-1/2 items-center gap-3 rounded-full bg-black/80 px-3 py-2 text-white shadow-ios-island backdrop-blur-2xl">
@@ -61,11 +76,15 @@ export function DynamicIslandHUD() {
 
       <button
         type="button"
-        aria-label="Disconnect"
-        onClick={() => setStatus('disconnected')}
-        className="grid h-8 w-8 place-items-center rounded-full bg-apple-red/20 text-apple-red transition hover:bg-apple-red hover:text-white"
+        aria-label={connected ? 'Disconnect' : 'Reconnect'}
+        onClick={handleToggleConnection}
+        className={`grid h-8 w-8 place-items-center rounded-full transition ${
+          connected
+            ? 'bg-apple-red/20 text-apple-red hover:bg-apple-red hover:text-white'
+            : 'bg-apple-mint/20 text-apple-mint hover:bg-apple-mint hover:text-black'
+        }`}
       >
-        <Icon name="power_settings_new" size={18} />
+        <Icon name={connected ? 'power_settings_new' : 'refresh'} size={18} />
       </button>
     </header>
   )

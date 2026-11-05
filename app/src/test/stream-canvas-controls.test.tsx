@@ -32,12 +32,31 @@ describe('StreamCanvas & Host Controls Integration', () => {
     vi.restoreAllMocks()
   })
 
-  it('renders a live JPEG frame in StreamCanvas when frameUrl is provided', () => {
-    render(<StreamCanvas frameUrl="blob:http://localhost/frame-100" />)
-    const img = screen.getByTestId('live-stream-frame')
-    expect(img).toBeInTheDocument()
-    expect(img).toHaveAttribute('src', 'blob:http://localhost/frame-100')
-    expect(screen.queryByText('pipeline_render.rs')).not.toBeInTheDocument()
+  it('renders JPEG blobs to a canvas with bitmap replacement and cleanup', async () => {
+    const bitmapOne = { close: vi.fn(), width: 1920, height: 1080 } as unknown as ImageBitmap
+    const bitmapTwo = { close: vi.fn(), width: 1920, height: 1080 } as unknown as ImageBitmap
+    const createImageBitmapMock = vi.fn()
+      .mockResolvedValueOnce(bitmapOne)
+      .mockResolvedValueOnce(bitmapTwo)
+    vi.stubGlobal('createImageBitmap', createImageBitmapMock)
+
+    const drawImage = vi.fn()
+    const getContext = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+      drawImage,
+      imageSmoothingEnabled: false,
+    } as unknown as CanvasRenderingContext2D)
+
+    const { rerender, unmount } = render(<StreamCanvas frame={new Blob(['one'], { type: 'image/jpeg' })} />)
+    await vi.waitFor(() => expect(drawImage).toHaveBeenCalledWith(bitmapOne, 0, 0, 1920, 1080))
+
+    rerender(<StreamCanvas frame={new Blob(['two'], { type: 'image/jpeg' })} />)
+    await vi.waitFor(() => expect(drawImage).toHaveBeenCalledWith(bitmapTwo, 0, 0, 1920, 1080))
+    expect(bitmapOne.close).toHaveBeenCalledOnce()
+
+    unmount()
+    expect(bitmapTwo.close).toHaveBeenCalledOnce()
+    getContext.mockRestore()
+    vi.unstubAllGlobals()
   })
 
   it('updates StreamCanvas frame when StreamEngine emits a frame event', () => {
@@ -105,6 +124,7 @@ describe('StreamCanvas & Host Controls Integration', () => {
     const listAppsSpy = vi.spyOn(StreamEngine.prototype, 'listApps').mockResolvedValue([
       { id: 'org.custom.CAD.desktop', name: 'Custom CAD', running: false },
     ])
+    const launchAppSpy = vi.spyOn(StreamEngine.prototype, 'launchApp').mockResolvedValue()
     const focusAppSpy = vi.spyOn(StreamEngine.prototype, 'focusApp').mockResolvedValue()
 
     const control = render(<ControlCenter />)
@@ -118,6 +138,10 @@ describe('StreamCanvas & Host Controls Integration', () => {
     expect(setPowerSpy).toHaveBeenCalledWith('suspend')
     fireEvent.click(screen.getByRole('button', { name: 'Rig Restart' }))
     expect(setPowerSpy).toHaveBeenCalledWith('restart')
+    fireEvent.change(screen.getByRole('slider', { name: 'Rig HDR Brightness' }), { target: { value: '35' } })
+    expect(useConnectionStore.getState().brightness).toBe(35)
+    fireEvent.click(screen.getByRole('button', { name: 'Studio Rig' }))
+    expect(useConnectionStore.getState().audioRoute).toBe('rig')
     control.unmount()
 
     render(<AppLibrary />)
@@ -125,8 +149,15 @@ describe('StreamCanvas & Host Controls Integration', () => {
     const focusBtn = await screen.findByRole('button', { name: 'Focus Custom CAD on Phone' })
     expect(screen.getByText('Idle')).toBeInTheDocument()
     fireEvent.click(focusBtn)
+    await vi.waitFor(() => expect(launchAppSpy).toHaveBeenCalledWith('org.custom.CAD.desktop'))
     expect(focusAppSpy).toHaveBeenCalledWith('org.custom.CAD.desktop')
     expect(configureEndpointSpy).toHaveBeenCalledWith('http://192.168.1.100:8080')
     expect(connectSpy).not.toHaveBeenCalled()
+
+    useConnectionStore.setState({ activeView: 'app-library' })
+    const switchDesktopBtn = screen.getByRole('button', { name: 'Switch to full desktop stream' })
+    fireEvent.click(switchDesktopBtn)
+    expect(setCropSpy).toHaveBeenCalledWith(false)
+    expect(useConnectionStore.getState().activeView).toBe('stream')
   })
 })

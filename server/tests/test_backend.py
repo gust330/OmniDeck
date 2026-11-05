@@ -38,19 +38,23 @@ def test_launch_uses_validated_desktop_id_without_shell(tmp_path, monkeypatch):
     assert calls[0][1]["shell"] is False
 
 
-def test_cua_invocations_are_argument_arrays_and_input_is_bounded(monkeypatch):
-    calls = []
-    monkeypatch.setattr("omnideck.backend.subprocess.run", lambda argv, **kw: calls.append((argv, kw)))
+def test_vnc_input_is_bounded_and_preserves_key_transitions(monkeypatch):
     backend = LinuxBackend(cua_driver=Path("/opt/cua-driver"))
+    def discard(coro, timeout=10):
+        coro.close()
+    monkeypatch.setattr(backend, "_run_vnc", discard)
 
     backend.handle_input({"type": "mouse-move", "payload": {"dx": 10**9, "dy": -10**9}})
-    backend.handle_input({"type": "key-down", "payload": {"key": "A"}})
+    assert backend._cursor == [1919.0, 0]
 
-    assert all(call[1]["shell"] is False for call in calls)
-    joined = " ".join(calls[0][0])
-    assert "10000" not in joined
-    assert "1000" in joined
-    assert "/opt/cua-driver" == calls[0][0][0]
+    actions = []
+    def capture(coro, timeout=10):
+        actions.append(coro.cr_frame.f_locals["action"])
+        coro.close()
+    monkeypatch.setattr(backend, "_run_vnc", capture)
+    backend.handle_input({"type": "key-down", "payload": {"key": "A"}})
+    backend.handle_input({"type": "key-up", "payload": {"key": "A"}})
+    assert actions == ["key", "key"]
 
 
 def test_get_active_window_parses_cua_driver_window_list(monkeypatch):
@@ -133,49 +137,55 @@ def test_status_reports_metrics_active_window_and_running_apps(monkeypatch):
     assert status["runningApps"] == [{"id": "code.desktop", "name": "Code", "running": True}]
 
 
-def test_normalized_coordinates_map_to_active_window_bbox(monkeypatch):
+def test_normalized_coordinates_map_to_current_frame_crop(monkeypatch):
     backend = LinuxBackend(cua_driver=Path("/opt/cua-driver"))
+    backend._frame_rect = (100, 50, 1200, 800)
     calls = []
-    monkeypatch.setattr(backend, "get_active_window", lambda: {
-        "title": "Editor",
-        "appId": "code.desktop",
-        "bbox": {"x": 100, "y": 50, "width": 1200, "height": 800},
-    })
-    monkeypatch.setattr(backend, "_cua", lambda tool, args: calls.append((tool, args)) or True)
+    def capture(coro, timeout=10):
+        frame = coro.cr_frame
+        calls.append((frame.f_locals["action"], frame.f_locals["payload"]))
+        coro.close()
+    monkeypatch.setattr(backend, "_run_vnc", capture)
 
     backend.handle_input({
         "type": "mouse-click",
         "payload": {"button": 0, "pressed": True, "normalizedX": 0.25, "normalizedY": 0.75},
     })
 
-    assert calls == [("click", {"x": 400.0, "y": 650.0})]
+    assert calls[0] == ("move", {"x": pytest.approx(399.75), "y": pytest.approx(649.25)})
+    assert calls[1] == ("button", {"button": 0, "pressed": True})
 
 
 def test_normalized_coordinates_without_bbox_fallback_to_desktop_dimensions(monkeypatch):
     backend = LinuxBackend(cua_driver=Path("/opt/cua-driver"))
+    backend._frame_rect = (0, 0, 1920, 1080)
     calls = []
-    monkeypatch.setattr(backend, "get_active_window", lambda: {"title": "", "appId": None, "bbox": None})
-    monkeypatch.setattr(backend, "_cua", lambda tool, args: calls.append((tool, args)) or True)
+    def capture(coro, timeout=10):
+        frame = coro.cr_frame
+        calls.append((frame.f_locals["action"], frame.f_locals["payload"]))
+        coro.close()
+    monkeypatch.setattr(backend, "_run_vnc", capture)
 
     backend.handle_input({
         "type": "mouse-move",
         "payload": {"normalizedX": 0.5, "normalizedY": 0.5},
     })
 
-    assert calls == [("move_cursor", {"x": 960.0, "y": 540.0, "scope": "desktop"})]
+    assert calls == [("move", {"x": pytest.approx(959.5), "y": pytest.approx(539.5)})]
 
 
 def test_crop_uses_centered_20_by_9_aspect_ratio(monkeypatch):
-    from PIL import Image
+    import numpy as np
 
-    source = Image.new("RGB", (2400, 1080), "black")
-    monkeypatch.setattr("PIL.ImageGrab.grab", lambda: source)
+    arr = np.zeros((1080, 2400, 4), dtype=np.uint8)
     backend = LinuxBackend()
     backend.set_crop(True)
+    monkeypatch.setattr(backend, "_run_vnc", lambda coro, timeout=15: (coro.close(), arr)[1])
 
     frame = backend.capture_frame()
 
     from io import BytesIO
+    from PIL import Image
     result = Image.open(BytesIO(frame))
     assert result.width / result.height == pytest.approx(20 / 9, rel=0.01)
 

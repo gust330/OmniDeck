@@ -1,9 +1,10 @@
 import { useEffect, useRef, type Ref } from 'react'
 import { useInputStore } from '@/stores/input-store'
 
-interface StreamCanvasProps {
+export interface StreamCanvasProps {
   canvasRef?: Ref<HTMLDivElement>
   remoteStream?: MediaStream | null
+  frame?: Blob | null
   frameUrl?: string | null
 }
 
@@ -18,8 +19,10 @@ const rustCode = `pub fn render_pipeline(frame: &mut Frame) {
     queue.submit(encoder.finish());
 }`
 
-export function StreamCanvas({ canvasRef, remoteStream, frameUrl }: StreamCanvasProps) {
+export function StreamCanvas({ canvasRef, remoteStream, frame, frameUrl }: StreamCanvasProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const renderCanvasRef = useRef<HTMLCanvasElement>(null)
+  const currentBitmapRef = useRef<ImageBitmap | null>(null)
   const cursor = useInputStore((state) => state.cursor)
   const hasMovedCursor = cursor.x > 0 || cursor.y > 0
 
@@ -28,6 +31,62 @@ export function StreamCanvas({ canvasRef, remoteStream, frameUrl }: StreamCanvas
       videoRef.current.srcObject = remoteStream
     }
   }, [remoteStream])
+
+  useEffect(() => {
+    let cancelled = false
+
+    if (!frame) {
+      if (currentBitmapRef.current) {
+        currentBitmapRef.current.close()
+        currentBitmapRef.current = null
+      }
+      return
+    }
+
+    if (typeof createImageBitmap === 'function') {
+      createImageBitmap(frame)
+        .then((bitmap) => {
+          if (cancelled) {
+            bitmap.close()
+            return
+          }
+
+          if (currentBitmapRef.current) {
+            currentBitmapRef.current.close()
+          }
+          currentBitmapRef.current = bitmap
+
+          const canvas = renderCanvasRef.current
+          if (canvas) {
+            if (canvas.width !== bitmap.width || canvas.height !== bitmap.height) {
+              canvas.width = bitmap.width
+              canvas.height = bitmap.height
+            }
+            const ctx = canvas.getContext('2d')
+            if (ctx) {
+              ctx.imageSmoothingEnabled = false
+              ctx.drawImage(bitmap, 0, 0, bitmap.width, bitmap.height)
+            }
+          }
+        })
+        .catch(() => {
+          // Ignore dropped/malformed frames
+        })
+    }
+
+    return () => {
+      cancelled = true
+    }
+  }, [frame])
+
+  useEffect(() => {
+    return () => {
+      if (currentBitmapRef.current) {
+        currentBitmapRef.current.close()
+        currentBitmapRef.current = null
+      }
+    }
+  }, [])
 
   return (
     <div
@@ -43,6 +102,12 @@ export function StreamCanvas({ canvasRef, remoteStream, frameUrl }: StreamCanvas
           muted
           data-testid="live-stream-video"
           className="absolute inset-0 h-full w-full object-contain"
+        />
+      ) : frame ? (
+        <canvas
+          ref={renderCanvasRef}
+          data-testid="live-stream-canvas"
+          className="absolute inset-0 h-full w-full object-contain select-none"
         />
       ) : frameUrl ? (
         <img

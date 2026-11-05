@@ -134,7 +134,7 @@ export class StreamEngine {
       const socket = this.dependencies.createWebSocket(this.endpoints.websocket)
       this.socket = socket
       try {
-        socket.binaryType = 'blob'
+        socket.binaryType = 'arraybuffer'
       } catch {
         // Some mock websockets may make binaryType read-only
       }
@@ -189,8 +189,16 @@ export class StreamEngine {
     return Array.isArray(payload) ? payload : payload.apps ?? []
   }
 
+  async launchApp(appId: string): Promise<void> {
+    await this.request('/api/apps/launch', { appId })
+  }
+
   async focusApp(appId: string): Promise<void> {
     await this.request('/api/focus', { appId })
+  }
+
+  async getStatus(): Promise<unknown> {
+    return await this.request('/api/status')
   }
 
   async setVolume(volume: number): Promise<void> {
@@ -308,23 +316,12 @@ export class StreamEngine {
     socket.onmessage = (event: MessageEvent) => {
       const data = event.data
       if (typeof Blob !== 'undefined' && data instanceof Blob) {
-        if (this.currentFrameUrl) {
-          this.dependencies.revokeObjectURL(this.currentFrameUrl)
-        }
-        const nextUrl = this.dependencies.createObjectURL(data)
-        this.currentFrameUrl = nextUrl
-        this.emit('frame', nextUrl)
+        this.emit('frame', data.type ? data : new Blob([data], { type: 'image/jpeg' }))
         return
       }
 
       if (typeof ArrayBuffer !== 'undefined' && data instanceof ArrayBuffer) {
-        if (this.currentFrameUrl) {
-          this.dependencies.revokeObjectURL(this.currentFrameUrl)
-        }
-        const blob = new Blob([data], { type: 'image/jpeg' })
-        const nextUrl = this.dependencies.createObjectURL(blob)
-        this.currentFrameUrl = nextUrl
-        this.emit('frame', nextUrl)
+        this.emit('frame', new Blob([data], { type: 'image/jpeg' }))
         return
       }
 
@@ -375,23 +372,12 @@ export class StreamEngine {
     socket.onmessage = (event: MessageEvent) => {
       const data = event.data
       if (typeof Blob !== 'undefined' && data instanceof Blob) {
-        if (this.currentFrameUrl) {
-          this.dependencies.revokeObjectURL(this.currentFrameUrl)
-        }
-        const nextUrl = this.dependencies.createObjectURL(data)
-        this.currentFrameUrl = nextUrl
-        this.emit('frame', nextUrl)
+        this.emit('frame', data.type ? data : new Blob([data], { type: 'image/jpeg' }))
         return
       }
 
       if (typeof ArrayBuffer !== 'undefined' && data instanceof ArrayBuffer) {
-        if (this.currentFrameUrl) {
-          this.dependencies.revokeObjectURL(this.currentFrameUrl)
-        }
-        const blob = new Blob([data], { type: 'image/jpeg' })
-        const nextUrl = this.dependencies.createObjectURL(blob)
-        this.currentFrameUrl = nextUrl
-        this.emit('frame', nextUrl)
+        this.emit('frame', new Blob([data], { type: 'image/jpeg' }))
         return
       }
 
