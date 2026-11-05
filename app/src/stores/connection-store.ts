@@ -29,14 +29,22 @@ interface ConnectionStore {
   toggleSettings: () => void
 }
 
+export const getDefaultHostUrl = (): string => {
+  if (typeof window !== 'undefined' && window.location) {
+    const hostname = window.location.hostname || 'localhost'
+    return `http://${hostname}:8080`
+  }
+  return 'http://localhost:8080'
+}
+
 const clampPercentage = (value: number) => Math.min(100, Math.max(0, value))
 
 export const useConnectionStore = create<ConnectionStore>((set) => ({
-  status: 'connected',
+  status: 'connecting',
   setStatus: (status) => set({ status }),
   hostConfig: {
     name: 'TITAN-RIG',
-    url: 'http://192.168.1.100:8080',
+    url: getDefaultHostUrl(),
     resolution: '4K',
     bitrate: 50,
     codec: 'av1',

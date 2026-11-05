@@ -73,8 +73,8 @@ describe('useConnectionStore', () => {
   });
 
   describe('Settings Modal & Configuration', () => {
-    it('defaults to the plain HTTP server endpoint on port 8080', () => {
-      expect(useConnectionStore.getState().hostConfig.url).toBe('http://192.168.1.100:8080')
+    it('defaults to the dynamic host server endpoint on port 8080', () => {
+      expect(useConnectionStore.getState().hostConfig.url).toContain(':8080')
     })
 
     it('toggles settings visibility', () => {

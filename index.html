@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OmniTouch OS — iPadOS-Inspired Phone Remote PC Companion</title>
+  <title>OmniTouch OS — Live Remote PC Companion & Touch Workspace</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -46,7 +46,7 @@
 <body class="min-h-screen flex flex-col p-4 md:p-6 overflow-x-hidden">
   
   <!-- Header with Brand & Mode Switcher -->
-  <header class="flex flex-col lg:flex-row items-center justify-between gap-4 mb-5 pb-4 border-b border-white/10">
+  <header class="flex flex-col lg:flex-row items-center justify-between gap-4 mb-4 pb-4 border-b border-white/10">
     <div class="flex items-center space-x-3.5">
       <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-400 p-[1px] shadow-[0_0_20px_rgba(10,132,255,0.4)]">
         <div class="w-full h-full bg-[#0a0d16] rounded-2xl flex items-center justify-center text-cyan-400">
@@ -58,41 +58,37 @@
           <h1 class="text-xl font-bold tracking-tight text-white">OmniTouch OS</h1>
           <span class="px-2 py-0.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold">iPadOS Liquid Glass</span>
         </div>
-        <p class="text-xs text-slate-400">Phone-Friendly Remote PC Companion & Stage Manager Touch Workspace</p>
+        <p class="text-xs text-slate-400">Live Remote PC Companion & Stage Manager Touch Workspace</p>
       </div>
     </div>
 
     <!-- Screen Navigation Switcher -->
     <div class="flex flex-wrap items-center gap-1.5 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800">
-      <button onclick="switchScreen('ipados_stream')" id="tab-ipados_stream" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 bg-blue-500 text-white shadow-md">
+      <button onclick="switchScreen('live_app')" id="tab-live_app" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center space-x-1.5 bg-blue-500 text-white shadow-md">
+        <span class="material-symbols-rounded text-base">play_circle</span>
+        <span>🚀 Live Functional App</span>
+      </button>
+      <button onclick="switchScreen('ipados_stream')" id="tab-ipados_stream" class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition-all flex items-center space-x-1.5">
         <span class="material-symbols-rounded text-base">desktop_windows</span>
-        <span>1. iPadOS Stream Workspace</span>
+        <span>Design Spec: Stream</span>
       </button>
       <button onclick="switchScreen('ipados_cc')" id="tab-ipados_cc" class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition-all flex items-center space-x-1.5">
         <span class="material-symbols-rounded text-base">tune</span>
-        <span>2. Control Center & App Library</span>
+        <span>Design Spec: Control Center</span>
       </button>
       <button onclick="switchScreen('deck_stream')" id="tab-deck_stream" class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition-all flex items-center space-x-1.5">
         <span class="material-symbols-rounded text-base">gamepad</span>
-        <span>3. Cyberdeck HUD</span>
-      </button>
-      <button onclick="switchScreen('deck_dash')" id="tab-deck_dash" class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition-all flex items-center space-x-1.5">
-        <span class="material-symbols-rounded text-base">dashboard</span>
-        <span>4. Telemetry Rig</span>
+        <span>Cyberdeck HUD</span>
       </button>
       <button onclick="switchScreen('deck_dock')" id="tab-deck_dock" class="px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition-all flex items-center space-x-1.5">
         <span class="material-symbols-rounded text-base">apps</span>
-        <span>5. Dock Customizer</span>
+        <span>Dock Customizer</span>
       </button>
     </div>
 
-    <!-- Hardware Passthrough Badge -->
-    <div class="hidden xl:flex items-center space-x-3 text-xs mono text-slate-300 bg-slate-900/80 px-3.5 py-1.5 rounded-xl border border-white/10">
-      <span class="flex items-center text-emerald-400"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-1.5"></span> TITAN-RIG • 120 FPS</span>
-      <span class="text-slate-600">|</span>
-      <span>🖱️ Physical Mouse (Raw 1:1)</span>
-      <span class="text-slate-600">|</span>
-      <span>⌨️ Magic KB Active</span>
+    <!-- Live Host Server Status Indicator -->
+    <div id="host-status-badge" class="flex items-center space-x-3 text-xs mono text-slate-300 bg-slate-900/80 px-3.5 py-1.5 rounded-xl border border-white/10">
+      <span class="flex items-center text-amber-400"><span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse mr-1.5"></span> Checking Host (8080)...</span>
     </div>
   </header>
 
@@ -102,23 +98,23 @@
       <!-- Camera punch hole on left -->
       <div class="device-notch"></div>
       
-      <!-- Live Screen iframe -->
-      <iframe id="screen-frame" src="omnitouch_ipados_stream_v2.html" class="w-full h-full border-none"></iframe>
+      <!-- Live Screen iframe (Loads the built live app by default!) -->
+      <iframe id="screen-frame" src="app/dist/index.html" class="w-full h-full border-none"></iframe>
     </div>
 
     <!-- Description & Narrative Bar -->
     <div class="w-full max-w-6xl mt-4 p-4 rounded-2xl glass flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
       <div>
         <h3 id="desc-title" class="text-sm font-bold text-cyan-300 flex items-center gap-2">
-          <span>1. OmniTouch — iPadOS-Style Remote PC Companion & Touch Stream</span>
+          <span>🚀 Live Functional OmniTouch App (Connected to Host PC)</span>
         </h3>
         <p id="desc-text" class="text-xs text-slate-300 mt-1 max-w-3xl">
-          Engineered for landscape phone two-thumb ergonomics. Features iPadOS 18 liquid glass materials, a top Dynamic Island HUD (120 FPS, 2.1ms, input mode switcher), left-thumb tactile modifier ribbon (⎋ Esc, ⇥ Tab, ⌃ Ctrl, ⌥ Opt, ⌘ Cmd, ⇧ Shift, F5), right-thumb touch action capsule (R-Click, Haptic Scroll, Keyboard, Exposé), and floating squircle dock with Spotify mini-widget.
+          The real production cross-platform application. Streams your real PC desktop at 120 FPS via the host server, translates touch/mouse/keyboard inputs, controls master audio volume, and launches/focuses installed applications in Single-Window Focus mode.
         </p>
       </div>
       <div class="flex items-center space-x-2 shrink-0">
-        <a id="open-link" href="omnitouch_ipados_stream_v2.html" target="_blank" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white flex items-center space-x-1.5 shadow-md transition-all">
-          <span>Open Fullscreen</span>
+        <a id="open-link" href="app/dist/index.html" target="_blank" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white flex items-center space-x-1.5 shadow-md transition-all">
+          <span>Open App Directly</span>
           <span class="material-symbols-rounded text-sm">open_in_new</span>
         </a>
       </div>
@@ -127,29 +123,29 @@
 
   <script>
     const screens = {
+      live_app: {
+        file: 'app/dist/index.html',
+        title: '🚀 Live Functional OmniTouch App (Connected to Host PC)',
+        text: 'The real production cross-platform application. Streams your real PC desktop at 120 FPS via the host server, translates touch/mouse/keyboard inputs, controls master audio volume, and launches/focuses installed applications in Single-Window Focus mode.'
+      },
       ipados_stream: {
         file: 'omnitouch_ipados_stream_v2.html',
-        title: '1. OmniTouch — iPadOS-Style Remote PC Companion & Touch Stream',
-        text: 'Engineered for landscape phone two-thumb ergonomics. Features iPadOS 18 liquid glass materials, a top Dynamic Island HUD (120 FPS, 2.1ms, input mode switcher), left-thumb tactile modifier ribbon (⎋ Esc, ⇥ Tab, ⌃ Ctrl, ⌥ Opt, ⌘ Cmd, ⇧ Shift, F5), right-thumb touch action capsule (R-Click, Haptic Scroll, Keyboard, Exposé), and floating squircle dock with Spotify mini-widget.'
+        title: 'Design Spec 1: iPadOS Liquid Glass Stream Workspace',
+        text: 'Engineered for landscape phone two-thumb ergonomics. Features iPadOS 18 liquid glass materials, a top Dynamic Island HUD (120 FPS, 2.1ms, input mode switcher), left-thumb tactile modifier ribbon (⎋ Esc, ⇥ Tab, ⌃ Ctrl, ⌥ Opt, ⌘ Cmd, ⇧ Shift, F5), right-thumb touch action capsule, and squircle dock.'
       },
       ipados_cc: {
         file: 'omnitouch_control_center_v2.html',
-        title: '2. OmniTouch — iPadOS Phone-Friendly Remote PC Control Center & App Library',
-        text: 'Inspired by iPadOS Control Center and Stage Manager. Left section houses native iOS vertical sliders for Volume (75%) and Rig HDR Brightness (85%), Apple Activity-style concentric telemetry rings (CPU 24%, GPU 45%, RAM 50%), and audio routing (Studio Rig vs iPhone Audio). Right section hosts a phone-optimized 2x4 Stage Manager App Library with 1-tap "Focus on Phone" actions.'
+        title: 'Design Spec 2: Control Center & App Library',
+        text: 'Inspired by iPadOS Control Center and Stage Manager. Left section houses vertical sliders for Volume and Rig HDR Brightness, concentric telemetry rings (CPU, GPU, RAM), and audio routing. Right section hosts a phone-optimized 2x4 Stage Manager App Library.'
       },
       deck_stream: {
         file: 'omnideck_stream_workspace_v1.html',
-        title: '3. OmniDeck — Handheld Cyberdeck Remote Stream Workspace',
+        title: 'Design Spec 3: Cyberdeck Stream Workspace',
         text: 'High-contrast cyberpunk/industrial theme with dark frosted glass, left-hand modifier strip, right-hand radial mouse action pod with 1x/2x/400 DPI precision switches, and desktop-stream overlay.'
-      },
-      deck_dash: {
-        file: 'omnideck_dashboard_v1.html',
-        title: '4. OmniDeck — Telemetry & Host Rig Dashboard',
-        text: 'Inspired by smart home & Xbox dashboards. Real-time CPU/GPU thermals & wattages, DDR5 memory meters, multi-room audio output switcher, monitor brightness & HDR sliders, active task focus card, and tactile app launcher.'
       },
       deck_dock: {
         file: 'omnideck_workspaces_dock_v1.html',
-        title: '5. OmniDeck — Workspace Profiles & Dock Customizer',
+        title: 'Design Spec 4: Workspace Profiles & Dock Customizer',
         text: 'Inspired by macOS Dock managers and Launchpad grids. Switch between dedicated workspace presets (Coding & DevOps, Gaming Rig, Couch Media, 3D Creation), browse remote PC installed apps, and drag-and-drop slots directly into the live handheld dock.'
       }
     };
@@ -172,6 +168,38 @@
         }
       });
     }
+
+    // Live Server Health Check
+    async function checkHost() {
+      const badge = document.getElementById('host-status-badge');
+      try {
+        const res = await fetch('http://localhost:8080/api/status', { method: 'GET', mode: 'cors' });
+        if (res.ok) {
+          const data = await res.json();
+          badge.innerHTML = `
+            <span class="flex items-center text-emerald-400 font-semibold">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-1.5"></span>
+              ${data.host || 'TITAN-RIG'} Online
+            </span>
+            <span class="text-slate-600">|</span>
+            <span class="text-cyan-400">CPU: ${Math.round(data.metrics?.cpu || 0)}%</span>
+            <span class="text-slate-600">|</span>
+            <span class="text-purple-400">RAM: ${Math.round(data.metrics?.ram || 0)}%</span>
+          `;
+        } else {
+          throw new Error();
+        }
+      } catch {
+        badge.innerHTML = `
+          <span class="flex items-center text-amber-400">
+            <span class="w-2 h-2 rounded-full bg-amber-400 mr-1.5"></span>
+            Host Offline · Start <code class="bg-black/50 px-1 py-0.5 rounded text-white ml-1">./run.sh</code> in server/
+          </span>
+        `;
+      }
+    }
+    checkHost();
+    setInterval(checkHost, 4000);
   </script>
 </body>
 </html>
