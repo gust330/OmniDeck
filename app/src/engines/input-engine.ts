@@ -95,20 +95,24 @@ export class InputEngine {
   private gamepadAnimationFrame: number | null = null
   private touchStartPoints = new Map<number, TouchPoint>()
   private lastTouchPoints = new Map<number, TouchPoint>()
+  private maxFingers = 0
   private touchMoved = false
-  private lastTapTime = 0
+  private normalizedCursor = { x: 0.5, y: 0.5 }
+  private toggleOverlays: (() => void) | null = null
 
   attach(
     element: HTMLElement,
     callback: InputCommandCallback,
     getModifierState?: () => KeyboardModifierState,
     consumeModifiers?: () => unknown,
+    toggleOverlays?: () => void,
   ): void {
     this.detach()
     this.element = element
     this.callback = callback
     this.getModifierState = getModifierState ?? null
     this.consumeModifiers = consumeModifiers ?? null
+    this.toggleOverlays = toggleOverlays ?? null
     this.abortController = new AbortController()
     const options = { signal: this.abortController.signal }
 
@@ -151,6 +155,7 @@ export class InputEngine {
     this.callback = null
     this.getModifierState = null
     this.consumeModifiers = null
+    this.toggleOverlays = null
   }
 
   rightClick(coords?: { normalizedX?: number; normalizedY?: number }): void {
@@ -173,8 +178,19 @@ export class InputEngine {
     if (!this.element || typeof clientX !== 'number' || typeof clientY !== 'number') return {}
     const rect = this.element.getBoundingClientRect()
     if (!rect || rect.width <= 0 || rect.height <= 0) return {}
-    const normalizedX = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width))
-    const normalizedY = Math.min(1, Math.max(0, (clientY - rect.top) / rect.height))
+    const media = this.element.querySelector('canvas, video, img') as HTMLCanvasElement | HTMLVideoElement | HTMLImageElement | null
+    const sourceWidth = media instanceof HTMLVideoElement ? media.videoWidth : media instanceof HTMLImageElement ? media.naturalWidth : media?.width
+    const sourceHeight = media instanceof HTMLVideoElement ? media.videoHeight : media instanceof HTMLImageElement ? media.naturalHeight : media?.height
+    let left = rect.left, top = rect.top, width = rect.width, height = rect.height
+    if (sourceWidth && sourceHeight) {
+      const scale = Math.min(rect.width / sourceWidth, rect.height / sourceHeight)
+      width = sourceWidth * scale
+      height = sourceHeight * scale
+      left += (rect.width - width) / 2
+      top += (rect.height - height) / 2
+    }
+    const normalizedX = Math.min(1, Math.max(0, (clientX - left) / width))
+    const normalizedY = Math.min(1, Math.max(0, (clientY - top) / height))
     return { normalizedX, normalizedY }
   }
 
@@ -254,8 +270,12 @@ export class InputEngine {
   }
 
   private handleMouseMove = (event: MouseEvent): void => {
-    if (document.pointerLockElement !== this.element) return
-    this.emit('mouse-move', { dx: event.movementX, dy: event.movementY })
+    if (document.pointerLockElement !== this.element || !this.element) return
+    const rect = this.element.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) return
+    this.normalizedCursor.x = Math.min(1, Math.max(0, this.normalizedCursor.x + event.movementX / rect.width))
+    this.normalizedCursor.y = Math.min(1, Math.max(0, this.normalizedCursor.y + event.movementY / rect.height))
+    this.emit('mouse-move', { normalizedX: this.normalizedCursor.x, normalizedY: this.normalizedCursor.y })
   }
 
   private handleMouseDown = (event: MouseEvent): void => {
@@ -280,6 +300,7 @@ export class InputEngine {
   private handleTouchStart = (event: TouchEvent): void => {
     event.preventDefault()
     this.touchMoved = false
+    this.maxFingers = event.touches.length
     this.touchStartPoints.clear()
     this.lastTouchPoints.clear()
     for (const touch of Array.from(event.touches)) {
@@ -288,47 +309,74 @@ export class InputEngine {
       this.touchStartPoints.set(touch.identifier, point)
       this.lastTouchPoints.set(touch.identifier, point)
     }
+    if (event.touches.length === 1) {
+      const point = this.touchStartPoints.values().next().value as TouchPoint
+      if (typeof point.normalizedX === 'number' && typeof point.normalizedY === 'number') {
+        this.normalizedCursor = { x: point.normalizedX, y: point.normalizedY }
+        this.emit('mouse-move', { normalizedX: point.normalizedX, normalizedY: point.normalizedY })
+      }
+    }
   }
 
   private handleTouchMove = (event: TouchEvent): void => {
     event.preventDefault()
-    if (event.touches.length !== 1) return
-
-    const touch = event.touches[0]
-    const previous = this.lastTouchPoints.get(touch.identifier)
-    if (!previous) return
-
-    const dx = touch.clientX - previous.x
-    const dy = touch.clientY - previous.y
-    const coords = this.normalizeCoordinates(touch.clientX, touch.clientY)
-    if (dx !== 0 || dy !== 0) {
-      this.touchMoved = true
-      this.emit('mouse-move', { dx, dy, ...coords })
+    if (this.maxFingers >= 3) return
+    if (event.touches.length === 2) {
+      const deltas = Array.from(event.touches).map((touch) => {
+        const previous = this.lastTouchPoints.get(touch.identifier)
+        return previous ? { x: touch.clientX - previous.x, y: touch.clientY - previous.y } : { x: 0, y: 0 }
+      })
+      const deltaX = deltas.reduce((sum, point) => sum + point.x, 0) / 2
+      const deltaY = deltas.reduce((sum, point) => sum + point.y, 0) / 2
+      if (deltaX !== 0 || deltaY !== 0) {
+        this.touchMoved = true
+        this.emit('mouse-scroll', { deltaX, deltaY })
+      }
+    } else if (event.touches.length === 1) {
+      const touch = event.touches[0]
+      const previous = this.lastTouchPoints.get(touch.identifier)
+      if (!previous) return
+      const coords = this.normalizeCoordinates(touch.clientX, touch.clientY)
+      if (touch.clientX !== previous.x || touch.clientY !== previous.y) {
+        this.touchMoved = true
+        if (typeof coords.normalizedX === 'number' && typeof coords.normalizedY === 'number') {
+          this.normalizedCursor = { x: coords.normalizedX, y: coords.normalizedY }
+        }
+        this.emit('mouse-move', coords)
+      }
     }
-    this.lastTouchPoints.set(touch.identifier, { x: touch.clientX, y: touch.clientY, ...coords })
+    for (const touch of Array.from(event.touches)) {
+      this.lastTouchPoints.set(touch.identifier, { x: touch.clientX, y: touch.clientY, ...this.normalizeCoordinates(touch.clientX, touch.clientY) })
+    }
   }
 
   private handleTouchEnd = (event: TouchEvent): void => {
     event.preventDefault()
     if (event.touches.length > 0) return
 
-    const fingerCount = this.touchStartPoints.size
-    const primaryPoint = this.touchStartPoints.values().next().value as TouchPoint | undefined
-    const coords = primaryPoint && typeof primaryPoint.normalizedX === 'number' && typeof primaryPoint.normalizedY === 'number'
-      ? { normalizedX: primaryPoint.normalizedX, normalizedY: primaryPoint.normalizedY }
-      : undefined
+    const fingerCount = this.maxFingers
+    const points = Array.from(this.touchStartPoints.values())
+    const average = points.length > 0 ? {
+      x: points.reduce((sum, point) => sum + point.x, 0) / points.length,
+      y: points.reduce((sum, point) => sum + point.y, 0) / points.length,
+    } : null
+    const coords = average ? this.normalizeCoordinates(average.x, average.y) : undefined
 
-    if (!this.touchMoved && fingerCount === 2) {
+    if (!this.touchMoved && fingerCount === 3) {
+      this.toggleOverlays?.()
+    } else if (!this.touchMoved && fingerCount === 2) {
       this.emitTap(2, 1, coords)
     } else if (!this.touchMoved && fingerCount === 1) {
-      const now = Date.now()
-      const clickCount = now - this.lastTapTime <= 300 ? 2 : 1
-      this.lastTapTime = clickCount === 2 ? 0 : now
-      this.emitTap(0, clickCount, coords)
+      if (coords && typeof coords.normalizedX === 'number' && typeof coords.normalizedY === 'number') {
+        this.normalizedCursor = { x: coords.normalizedX, y: coords.normalizedY }
+        this.emit('mouse-move', coords)
+      }
+      this.emitTap(0, 1, coords)
     }
 
     this.touchStartPoints.clear()
     this.lastTouchPoints.clear()
+    this.maxFingers = 0
   }
 
   private emitTap(button: number, clickCount: number, coords?: { normalizedX?: number; normalizedY?: number }): void {

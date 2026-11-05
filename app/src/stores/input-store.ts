@@ -38,6 +38,8 @@ interface InputStore {
   setInputMode: (inputMode: InputMode) => void
   cursor: CursorPosition
   setCursor: (cursor: CursorPosition) => void
+  normalizedCursor: { x: number; y: number }
+  setNormalizedCursor: (normalizedX: number, normalizedY: number) => void
   moveCursor: (dx: number, dy: number) => void
   isPointerLocked: boolean
   setPointerLocked: (isPointerLocked: boolean) => void
@@ -92,15 +94,31 @@ export const useInputStore = create<InputStore>((set, get) => ({
   setInputMode: (inputMode) => set({ inputMode }),
   cursor: { x: 0, y: 0 },
   setCursor: (cursor) => set({ cursor }),
+  normalizedCursor: { x: 0.5, y: 0.5 },
+  setNormalizedCursor: (normalizedX, normalizedY) =>
+    set({
+      normalizedCursor: {
+        x: Math.min(1, Math.max(0, normalizedX)),
+        y: Math.min(1, Math.max(0, normalizedY)),
+      },
+    }),
   moveCursor: (dx, dy) =>
     set((state) => {
       const maxX = typeof window === 'undefined' ? Infinity : window.innerWidth
       const maxY = typeof window === 'undefined' ? Infinity : window.innerHeight
+      const nextX = Math.min(maxX, Math.max(0, state.cursor.x + dx))
+      const nextY = Math.min(maxY, Math.max(0, state.cursor.y + dy))
+      const nx = maxX > 0 ? nextX / maxX : 0.5
+      const ny = maxY > 0 ? nextY / maxY : 0.5
 
       return {
         cursor: {
-          x: Math.min(maxX, Math.max(0, state.cursor.x + dx)),
-          y: Math.min(maxY, Math.max(0, state.cursor.y + dy)),
+          x: nextX,
+          y: nextY,
+        },
+        normalizedCursor: {
+          x: Math.min(1, Math.max(0, nx)),
+          y: Math.min(1, Math.max(0, ny)),
         },
       }
     }),

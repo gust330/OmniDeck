@@ -27,6 +27,20 @@ describe('StreamWorkspace Integration', () => {
     vi.restoreAllMocks()
   })
 
+  it('three-finger tap retracts and reveals every surrounding overlay without host commands', () => {
+    const sendInputSpy = vi.spyOn(StreamEngine.prototype, 'sendInput')
+    const { container } = render(<StreamWorkspace />)
+    const canvas = container.querySelector('[data-ui]') as HTMLDivElement
+    const t = (identifier: number) => ({ identifier, clientX: identifier * 20, clientY: 40 })
+    fireEvent.touchStart(canvas, { touches: [t(1), t(2), t(3)] })
+    fireEvent.touchEnd(canvas, { touches: [] })
+    expect(screen.getByTestId('stream-overlays')).toHaveAttribute('data-hidden', 'true')
+    expect(sendInputSpy).not.toHaveBeenCalled()
+    fireEvent.touchStart(canvas, { touches: [t(1), t(2), t(3)] })
+    fireEvent.touchEnd(canvas, { touches: [] })
+    expect(screen.getByTestId('stream-overlays')).toHaveAttribute('data-hidden', 'false')
+  })
+
   it('connects StreamEngine on mount and shows an explicit connecting state instead of demo content', () => {
     const connectSpy = vi.spyOn(StreamEngine.prototype, 'connect')
     const { unmount } = render(<StreamWorkspace />)

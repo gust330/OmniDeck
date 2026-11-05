@@ -22,12 +22,13 @@ export function StreamWorkspace() {
   const [frame, setFrame] = useState<Blob | null>(null)
   const [frameUrl, setFrameUrl] = useState<string | null>(null)
   const [streamError, setStreamError] = useState<string | null>(null)
+  const [overlaysHidden, setOverlaysHidden] = useState(false)
 
   const hostUrl = useConnectionStore((state) => state.hostConfig.url)
   const hostName = useConnectionStore((state) => state.hostConfig.name)
   const status = useConnectionStore((state) => state.status)
   const updateTelemetry = useTelemetryStore((state) => state.updateTelemetry)
-  const moveCursor = useInputStore((state) => state.moveCursor)
+  const setNormalizedCursor = useInputStore((state) => state.setNormalizedCursor)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -112,15 +113,18 @@ export function StreamWorkspace() {
       canvas,
       (command) => {
         if (command.type === 'mouse-move') {
-          const payload = command.payload as { dx?: number; dy?: number }
-          if (typeof payload.dx === 'number' && typeof payload.dy === 'number') {
-            moveCursor(payload.dx, payload.dy)
+          const payload = command.payload as { normalizedX?: number; normalizedY?: number; dx?: number; dy?: number }
+          if (typeof payload.normalizedX === 'number' && typeof payload.normalizedY === 'number') {
+            setNormalizedCursor(payload.normalizedX, payload.normalizedY)
+          } else if (typeof payload.dx === 'number' && typeof payload.dy === 'number') {
+            useInputStore.getState().moveCursor(payload.dx, payload.dy)
           }
         }
         streamEngine.sendInput(command)
       },
       () => useInputStore.getState().modifiers,
       () => useInputStore.getState().consumeLatched(),
+      () => setOverlaysHidden((prev) => !prev),
     )
 
     return () => {
@@ -133,7 +137,7 @@ export function StreamWorkspace() {
       setFrameUrl(null)
       setStreamError(null)
     }
-  }, [hostUrl, moveCursor, updateTelemetry])
+  }, [hostUrl, setNormalizedCursor, updateTelemetry])
 
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-canvas text-white">
@@ -146,18 +150,58 @@ export function StreamWorkspace() {
         error={streamError}
         hostName={hostName}
       />
-      <DynamicIslandHUD
-        onDisconnect={() => disconnectRef.current()}
-        onReconnect={() => reconnectRef.current()}
-      />
-      <div className="pointer-events-none absolute inset-x-5 top-1/2 z-20 flex -translate-y-1/2 items-center justify-between">
-        <ModifierRibbon />
-        <ActionPod
-          onRightClick={() => inputEngineRef.current?.rightClick()}
-          onScroll={(deltaY) => inputEngineRef.current?.scroll(deltaY)}
-        />
+      <div
+        data-testid="stream-overlays"
+        data-hidden={overlaysHidden ? 'true' : 'false'}
+        className="pointer-events-none absolute inset-0 z-20"
+      >
+        <div
+          className={`transition-all duration-300 ease-in-out ${
+            overlaysHidden ? '-translate-y-24 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100 pointer-events-auto'
+          }`}
+        >
+          <DynamicIslandHUD
+            onDisconnect={() => disconnectRef.current()}
+            onReconnect={() => reconnectRef.current()}
+          />
+        </div>
+        <div className="pointer-events-none absolute inset-x-5 top-1/2 z-20 flex -translate-y-1/2 items-center justify-between">
+          <div
+            className={`transition-all duration-300 ease-in-out ${
+              overlaysHidden ? '-translate-x-24 opacity-0 pointer-events-none' : 'translate-x-0 opacity-100 pointer-events-auto'
+            }`}
+          >
+            <ModifierRibbon />
+          </div>
+          <div
+            className={`transition-all duration-300 ease-in-out ${
+              overlaysHidden ? 'translate-x-24 opacity-0 pointer-events-none' : 'translate-x-0 opacity-100 pointer-events-auto'
+            }`}
+          >
+            <ActionPod
+              onRightClick={() => inputEngineRef.current?.rightClick()}
+              onScroll={(deltaY) => inputEngineRef.current?.scroll(deltaY)}
+            />
+          </div>
+        </div>
+        <div
+          className={`transition-all duration-300 ease-in-out ${
+            overlaysHidden ? 'translate-y-24 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100 pointer-events-auto'
+          }`}
+        >
+          <FloatingDock />
+        </div>
       </div>
-      <FloatingDock />
+      <button
+        type="button"
+        aria-label="Reveal controls"
+        onClick={() => setOverlaysHidden(false)}
+        className={`fixed top-3 right-4 z-40 rounded-full border border-white/10 bg-black/60 px-2.5 py-1 text-[11px] text-white/50 backdrop-blur transition-all duration-300 hover:text-white ${
+          overlaysHidden ? 'opacity-100 pointer-events-auto translate-y-0' : 'opacity-0 pointer-events-none -translate-y-4'
+        }`}
+      >
+        Show Controls
+      </button>
     </main>
   )
 }

@@ -207,6 +207,61 @@ describe('InputEngine', () => {
       expect(rightClicks[1].payload.pressed).toBe(false);
     });
 
+    it('touchstart with 1 finger immediately positions pointer at touch position', () => {
+      engine.attach(container, (cmd) => commands.push(cmd));
+      vi.spyOn(container, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 200, height: 100, right: 200, bottom: 100, x: 0, y: 0, toJSON: () => ({}) });
+      const touch = (identifier: number, clientX: number, clientY: number) => ({ identifier, clientX, clientY } as Touch);
+      container.dispatchEvent(new TouchEvent('touchstart', { touches: [touch(1, 50, 50)] }));
+      expect(commands.find((c) => c.type === 'mouse-move')?.payload).toEqual({ normalizedX: 0.25, normalizedY: 0.5 });
+    });
+
+    it('maps touch directly into object-contain stream coordinates', () => {
+      engine.attach(container, (cmd) => commands.push(cmd));
+      vi.spyOn(container, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 1000, height: 500, right: 1000, bottom: 500, x: 0, y: 0, toJSON: () => ({}) });
+      const media = document.createElement('canvas'); media.width = 400; media.height = 400; container.appendChild(media);
+      const touch = (identifier: number, clientX: number, clientY: number) => ({ identifier, clientX, clientY } as Touch);
+      container.dispatchEvent(new TouchEvent('touchstart', { touches: [touch(1, 250, 250)] }));
+      container.dispatchEvent(new TouchEvent('touchmove', { touches: [touch(1, 500, 250)] }));
+      const moves = commands.filter((c) => c.type === 'mouse-move');
+      expect(moves[moves.length - 1]?.payload).toEqual({ normalizedX: 0.5, normalizedY: 0.5 });
+    });
+
+    it('one tap emits exactly one left click and repeated taps never infer double-click', () => {
+      engine.attach(container, (cmd) => commands.push(cmd));
+      const touch = (identifier: number, clientX: number, clientY: number) => ({ identifier, clientX, clientY } as Touch);
+      for (let i = 0; i < 2; i++) {
+        container.dispatchEvent(new TouchEvent('touchstart', { touches: [touch(1, 20, 30)] }));
+        container.dispatchEvent(new TouchEvent('touchend', { touches: [], changedTouches: [touch(1, 20, 30)] }));
+      }
+      expect(commands.filter((c) => c.type === 'mouse-click')).toHaveLength(4);
+      expect(commands.filter((c) => c.type === 'mouse-click').every((c) => c.payload.clickCount === 1)).toBe(true);
+    });
+
+    it('two-finger drag scrolls without moving or clicking, while tap right-clicks midpoint', () => {
+      engine.attach(container, (cmd) => commands.push(cmd));
+      vi.spyOn(container, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, width: 200, height: 100, right: 200, bottom: 100, x: 0, y: 0, toJSON: () => ({}) });
+      const t = (identifier: number, clientX: number, clientY: number) => ({ identifier, clientX, clientY } as Touch);
+      container.dispatchEvent(new TouchEvent('touchstart', { touches: [t(1, 40, 40), t(2, 60, 40)] }));
+      container.dispatchEvent(new TouchEvent('touchmove', { touches: [t(1, 40, 60), t(2, 60, 60)] }));
+      container.dispatchEvent(new TouchEvent('touchend', { touches: [] }));
+      expect(commands.filter((c) => c.type === 'mouse-scroll')).toHaveLength(1);
+      expect(commands.filter((c) => c.type === 'mouse-move' || c.type === 'mouse-click')).toHaveLength(0);
+      commands.length = 0;
+      container.dispatchEvent(new TouchEvent('touchstart', { touches: [t(1, 40, 40), t(2, 60, 40)] }));
+      container.dispatchEvent(new TouchEvent('touchend', { touches: [] }));
+      expect(commands[0].payload).toMatchObject({ button: 2, normalizedX: 0.25, normalizedY: 0.4 });
+    });
+
+    it('three-finger tap toggles overlays without host input', () => {
+      const toggle = vi.fn();
+      engine.attach(container, (cmd) => commands.push(cmd), undefined, undefined, toggle);
+      const t = (identifier: number) => ({ identifier, clientX: 20 * identifier, clientY: 20 } as Touch);
+      container.dispatchEvent(new TouchEvent('touchstart', { touches: [t(1), t(2), t(3)] }));
+      container.dispatchEvent(new TouchEvent('touchend', { touches: [] }));
+      expect(toggle).toHaveBeenCalledOnce();
+      expect(commands).toHaveLength(0);
+    });
+
     it('handles touch gestures: 1-finger drag emits mouse-move', () => {
       engine.attach(container, (cmd) => commands.push(cmd));
 
@@ -229,7 +284,7 @@ describe('InputEngine', () => {
 
       const moves = commands.filter((c) => c.type === 'mouse-move');
       expect(moves.length).toBe(1);
-      expect(moves[0].payload).toEqual({ dx: 25, dy: 10 });
+      expect(moves[0].payload).toEqual({});
     });
   });
 });

@@ -113,6 +113,7 @@ export function FloatingDock() {
         <div
           role="region"
           aria-label="Applications"
+          data-testid="dock-carousel"
           className="flex min-w-0 max-w-full flex-1 touch-pan-x snap-x snap-mandatory items-center gap-2 overflow-x-auto overscroll-x-contain"
           onPointerDown={stopGestureLeakage}
           onPointerMove={stopGestureLeakage}

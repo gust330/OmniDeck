@@ -26,8 +26,7 @@ export function StreamCanvas({
   const currentBitmapRef = useRef<ImageBitmap | null>(null)
   const decodeSeqRef = useRef(0)
   const lastDrawnSeqRef = useRef(0)
-  const cursor = useInputStore((state) => state.cursor)
-  const hasMovedCursor = cursor.x > 0 || cursor.y > 0
+  const normalizedCursor = useInputStore((state) => state.normalizedCursor)
 
   useEffect(() => {
     if (videoRef.current && remoteStream) {
@@ -89,10 +88,40 @@ export function StreamCanvas({
     }
   }, [])
 
+  const getPointerPosition = () => {
+    const el = canvasRef && 'current' in canvasRef ? canvasRef.current : null
+    const nx = normalizedCursor?.x ?? 0.5
+    const ny = normalizedCursor?.y ?? 0.5
+    if (!el) {
+      return { left: `${nx * 100}%`, top: `${ny * 100}%` }
+    }
+    const rect = el.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) {
+      return { left: `${nx * 100}%`, top: `${ny * 100}%` }
+    }
+    const media = el.querySelector('canvas, video, img') as HTMLCanvasElement | HTMLVideoElement | HTMLImageElement | null
+    const sourceWidth = media instanceof HTMLVideoElement ? media.videoWidth : media instanceof HTMLImageElement ? media.naturalWidth : media?.width
+    const sourceHeight = media instanceof HTMLVideoElement ? media.videoHeight : media instanceof HTMLImageElement ? media.naturalHeight : media?.height
+    let left = 0
+    let top = 0
+    let width = rect.width
+    let height = rect.height
+    if (sourceWidth && sourceHeight && sourceWidth > 0 && sourceHeight > 0) {
+      const scale = Math.min(rect.width / sourceWidth, rect.height / sourceHeight)
+      width = sourceWidth * scale
+      height = sourceHeight * scale
+      left = (rect.width - width) / 2
+      top = (rect.height - height) / 2
+    }
+    const pointerX = left + nx * width
+    const pointerY = top + ny * height
+    return { left: `${pointerX}px`, top: `${pointerY}px` }
+  }
+
   return (
     <div
       ref={canvasRef}
-      className="absolute inset-0 overflow-hidden bg-gradient-to-br from-[#111827] via-[#090d17] to-[#030407]"
+      className="absolute inset-0 cursor-none touch-none overflow-hidden bg-gradient-to-br from-[#111827] via-[#090d17] to-[#030407]"
       data-ui
     >
       {remoteStream ? (
@@ -135,12 +164,12 @@ export function StreamCanvas({
         </div>
       )}
       <div
+        data-testid="hardware-cursor"
         className="pointer-events-none absolute flex items-center gap-2 transition-transform duration-75"
-        style={
-          hasMovedCursor
-            ? { left: cursor.x, top: cursor.y, transform: 'translate(-50%, -50%)' }
-            : { left: '61%', top: '46%' }
-        }
+        style={{
+          ...getPointerPosition(),
+          transform: 'translate(-50%, -50%)',
+        }}
       >
         <span className="h-5 w-5 rounded-full border-2 border-white bg-apple-blue shadow-[0_0_14px_rgba(10,132,255,.8)]" />
         <span className="rounded-full bg-black/65 px-2.5 py-1 text-[9px] text-white/75 backdrop-blur">
