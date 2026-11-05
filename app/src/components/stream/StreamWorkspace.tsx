@@ -21,9 +21,11 @@ export function StreamWorkspace() {
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null)
   const [frame, setFrame] = useState<Blob | null>(null)
   const [frameUrl, setFrameUrl] = useState<string | null>(null)
+  const [streamError, setStreamError] = useState<string | null>(null)
 
   const hostUrl = useConnectionStore((state) => state.hostConfig.url)
-  const setStatus = useConnectionStore((state) => state.setStatus)
+  const hostName = useConnectionStore((state) => state.hostConfig.name)
+  const status = useConnectionStore((state) => state.status)
   const updateTelemetry = useTelemetryStore((state) => state.updateTelemetry)
   const moveCursor = useInputStore((state) => state.moveCursor)
 
@@ -37,24 +39,28 @@ export function StreamWorkspace() {
     const handleStreamEvent = (event: StreamEvent) => {
       switch (event.type) {
         case 'connected':
-          setStatus('connected')
+          useConnectionStore.getState().setStatus('connected')
+          setStreamError(null)
           break
         case 'disconnected':
-          setStatus('disconnected')
+          useConnectionStore.getState().setStatus('disconnected')
           setRemoteStream(null)
           setFrame(null)
           setFrameUrl(null)
           break
         case 'remote-stream':
           setRemoteStream((event.data as MediaStream) ?? null)
+          setStreamError(null)
           break
         case 'frame':
           if (typeof Blob !== 'undefined' && event.data instanceof Blob) {
             setFrame(event.data)
             setFrameUrl(null)
+            setStreamError(null)
           } else if (typeof event.data === 'string') {
             setFrameUrl(event.data)
             setFrame(null)
+            setStreamError(null)
           }
           break
         case 'telemetry':
@@ -66,21 +72,34 @@ export function StreamWorkspace() {
             })
           }
           break
-        case 'error':
+        case 'error': {
+          const message =
+            event.data && typeof event.data === 'object' && 'message' in event.data
+              ? String((event.data as { message: unknown }).message)
+              : typeof event.data === 'string'
+                ? event.data
+                : 'Host connection failed'
+          setStreamError(message)
+          break
+        }
         case 'ice-state':
           break
       }
     }
 
     const connectStream = () => {
+      useConnectionStore.getState().setStatus('connecting')
+      setStreamError(null)
       void streamEngine.connect(hostUrl, handleStreamEvent)
     }
 
     const disconnectStream = () => {
       streamEngine.disconnect()
+      useConnectionStore.getState().setStatus('disconnected')
       setRemoteStream(null)
       setFrame(null)
       setFrameUrl(null)
+      setStreamError(null)
     }
 
     reconnectRef.current = connectStream
@@ -112,8 +131,9 @@ export function StreamWorkspace() {
       setRemoteStream(null)
       setFrame(null)
       setFrameUrl(null)
+      setStreamError(null)
     }
-  }, [hostUrl, moveCursor, setStatus, updateTelemetry])
+  }, [hostUrl, moveCursor, updateTelemetry])
 
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-canvas text-white">
@@ -122,6 +142,9 @@ export function StreamWorkspace() {
         remoteStream={remoteStream}
         frame={frame}
         frameUrl={frameUrl}
+        status={status}
+        error={streamError}
+        hostName={hostName}
       />
       <DynamicIslandHUD
         onDisconnect={() => disconnectRef.current()}

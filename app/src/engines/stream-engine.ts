@@ -85,7 +85,6 @@ export class StreamEngine {
   private socket: WebSocket | null = null
   private callback: StreamEventCallback | null = null
   private _isConnected = false
-  private mockMode = false
   private endpoints: HostEndpoints = { websocket: '', http: '' }
   private currentFrameUrl: string | null = null
   private readonly dependencies: StreamEngineDependencies
@@ -161,7 +160,7 @@ export class StreamEngine {
         }
       }
     } catch (error) {
-      this.enterMockMode(url, error)
+      this.handleConnectionFailure('connection-failed', error)
     }
 
     // Remote streams arrive asynchronously through the remote-stream event.
@@ -244,7 +243,6 @@ export class StreamEngine {
     }
 
     this._isConnected = false
-    this.mockMode = false
     if (this.currentFrameUrl) {
       this.dependencies.revokeObjectURL(this.currentFrameUrl)
       this.currentFrameUrl = null
@@ -255,12 +253,10 @@ export class StreamEngine {
 
   private configureDataChannel(channel: RTCDataChannel, url: string): void {
     channel.onopen = () => {
-      this.mockMode = false
       this._isConnected = true
       this.emit('connected', { url, channel: channel.label, mock: false })
     }
     channel.onclose = () => {
-      if (this.mockMode) return
       this._isConnected = false
       this.emit('disconnected', { reason: 'data-channel-closed' })
     }
@@ -296,12 +292,11 @@ export class StreamEngine {
       const state = pc.iceConnectionState
       this.emit('ice-state', { state })
       if (state === 'connected' || state === 'completed') {
-        this.mockMode = false
         this._isConnected = true
       } else if (state === 'failed') {
         this.emit('error', { message: 'ICE connection failed' })
-        this.enterMockMode(url)
-      } else if ((state === 'disconnected' || state === 'closed') && !this.mockMode) {
+        this.handleConnectionFailure('connection-failed')
+      } else if (state === 'disconnected' || state === 'closed') {
         this._isConnected = false
       }
     }
@@ -310,7 +305,6 @@ export class StreamEngine {
   private configureHostSocket(socket: WebSocket, url: string): void {
     socket.onopen = () => {
       this._isConnected = true
-      this.mockMode = false
       this.emit('connected', { url, mock: false, websocket: this.endpoints.websocket })
     }
     socket.onmessage = (event: MessageEvent) => {
@@ -341,22 +335,17 @@ export class StreamEngine {
         }
       }
     }
-    socket.onerror = (error) => this.enterMockMode(url, error)
+    socket.onerror = (error) => this.handleConnectionFailure('connection-failed', error)
     socket.onclose = () => {
-      if (this.mockMode) return
-      if (!this._isConnected) {
-        this.enterMockMode(url)
-        return
-      }
+      const wasConnected = this._isConnected
       this._isConnected = false
-      this.emit('disconnected', { reason: 'socket-closed' })
+      this.emit('disconnected', { reason: wasConnected ? 'socket-closed' : 'connection-failed' })
     }
   }
 
   private configureSignaling(socket: WebSocket, pc: RTCPeerConnection, url: string): void {
     socket.onopen = () => {
       this._isConnected = true
-      this.mockMode = false
       this.emit('connected', { url, mock: false, websocket: this.endpoints.websocket })
 
       void (async () => {
@@ -398,15 +387,11 @@ export class StreamEngine {
         void this.handleSignal(pc, data)
       }
     }
-    socket.onerror = (error) => this.enterMockMode(url, error)
+    socket.onerror = (error) => this.handleConnectionFailure('connection-failed', error)
     socket.onclose = () => {
-      if (this.mockMode) return
-      if (!this._isConnected) {
-        this.enterMockMode(url)
-        return
-      }
+      const wasConnected = this._isConnected
       this._isConnected = false
-      this.emit('disconnected', { reason: 'socket-closed' })
+      this.emit('disconnected', { reason: wasConnected ? 'socket-closed' : 'connection-failed' })
     }
   }
 
@@ -430,12 +415,10 @@ export class StreamEngine {
     }
   }
 
-  private enterMockMode(url: string, error?: unknown): void {
+  private handleConnectionFailure(reason = 'connection-failed', error?: unknown): void {
     if (error) this.emit('error', error)
-    if (this.mockMode) return
-    this.mockMode = true
-    this._isConnected = true
-    this.emit('connected', { url, mock: true })
+    this._isConnected = false
+    this.emit('disconnected', { reason })
   }
 
   private emit(type: StreamEventType, data?: unknown): void {

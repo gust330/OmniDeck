@@ -172,8 +172,9 @@
     // Live Server Health Check
     async function checkHost() {
       const badge = document.getElementById('host-status-badge');
+      const host = (window.location && window.location.hostname) ? window.location.hostname : 'localhost';
       try {
-        const res = await fetch('http://localhost:8080/api/status', { method: 'GET', mode: 'cors' });
+        const res = await fetch(`http://${host}:8080/api/status`, { method: 'GET', mode: 'cors' });
         if (res.ok) {
           const data = await res.json();
           badge.innerHTML = `

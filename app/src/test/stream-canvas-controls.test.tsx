@@ -59,6 +59,29 @@ describe('StreamCanvas & Host Controls Integration', () => {
     vi.unstubAllGlobals()
   })
 
+  it('does not let a newer frame cancel an in-flight JPEG decode', async () => {
+    let resolveFirst!: (bitmap: ImageBitmap) => void
+    let resolveSecond!: (bitmap: ImageBitmap) => void
+    const bitmapOne = { close: vi.fn(), width: 800, height: 600 } as unknown as ImageBitmap
+    const bitmapTwo = { close: vi.fn(), width: 800, height: 600 } as unknown as ImageBitmap
+    vi.stubGlobal('createImageBitmap', vi.fn()
+      .mockReturnValueOnce(new Promise<ImageBitmap>((resolve) => { resolveFirst = resolve }))
+      .mockReturnValueOnce(new Promise<ImageBitmap>((resolve) => { resolveSecond = resolve })))
+    const drawImage = vi.fn()
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+      drawImage,
+      imageSmoothingEnabled: false,
+    } as unknown as CanvasRenderingContext2D)
+
+    const { rerender } = render(<StreamCanvas frame={new Blob(['one'], { type: 'image/jpeg' })} />)
+    rerender(<StreamCanvas frame={new Blob(['two'], { type: 'image/jpeg' })} />)
+    resolveFirst(bitmapOne)
+    await vi.waitFor(() => expect(drawImage).toHaveBeenCalledWith(bitmapOne, 0, 0, 800, 600))
+    resolveSecond(bitmapTwo)
+    await vi.waitFor(() => expect(drawImage).toHaveBeenCalledWith(bitmapTwo, 0, 0, 800, 600))
+    vi.unstubAllGlobals()
+  })
+
   it('updates StreamCanvas frame when StreamEngine emits a frame event', () => {
     let callback: ((event: StreamEvent) => void) | null = null
     vi.spyOn(StreamEngine.prototype, 'connect').mockImplementation(async (_url, cb) => {
@@ -67,7 +90,8 @@ describe('StreamCanvas & Host Controls Integration', () => {
     })
 
     render(<StreamWorkspace />)
-    expect(screen.getByText('pipeline_render.rs')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Connecting to TITAN-RIG')
+    expect(screen.queryByText('pipeline_render.rs')).not.toBeInTheDocument()
 
     act(() => {
       callback?.({ type: 'frame', data: 'blob:stream-frame-live' })

@@ -144,7 +144,8 @@ describe('StreamEngine', () => {
     peer.iceConnectionState = 'failed'
     peer.oniceconnectionstatechange?.()
     expect(events.some((e) => e.type === 'error' && (e.data as { message: string }).message === 'ICE connection failed')).toBe(true)
-    expect(events).toContainEqual(expect.objectContaining({ type: 'connected', data: expect.objectContaining({ mock: true }) }))
+    expect(engine.isConnected).toBe(false)
+    expect(events).toContainEqual({ type: 'disconnected', data: { reason: 'connection-failed' } })
   })
 
   it('handles invalid signaling messages gracefully with error events', async () => {
@@ -153,7 +154,7 @@ describe('StreamEngine', () => {
     expect(events.some((e) => e.type === 'error')).toBe(true)
   })
 
-  it('enters mock mode when signaling cannot be created so the UI stays usable', async () => {
+  it('reports connection failures without claiming a mock connection', async () => {
     engine = new StreamEngine({
       createPeerConnection: () => peer as unknown as RTCPeerConnection,
       createWebSocket: () => { throw new Error('WebSocket unavailable') },
@@ -162,25 +163,26 @@ describe('StreamEngine', () => {
 
     await engine.connect('wss://offline-host', (event) => events.push(event))
 
-    expect(engine.isConnected).toBe(true)
-    expect(events).toContainEqual({
-      type: 'connected',
-      data: expect.objectContaining({ mock: true, url: 'wss://offline-host' }),
-    })
+    expect(engine.isConnected).toBe(false)
+    expect(events.some((event) => event.type === 'connected')).toBe(false)
+    expect(events).toContainEqual(expect.objectContaining({ type: 'error' }))
+    expect(events).toContainEqual({ type: 'disconnected', data: { reason: 'connection-failed' } })
   })
 
-  it('falls back to mock mode after a signaling socket error', async () => {
+  it('reports a socket error without claiming a mock connection', async () => {
     await engine.connect('wss://offline-host', (event) => events.push(event))
     socket.onerror?.(new Event('error'))
-    expect(engine.isConnected).toBe(true)
-    expect(events).toContainEqual(expect.objectContaining({ type: 'connected', data: expect.objectContaining({ mock: true }) }))
+    expect(engine.isConnected).toBe(false)
+    expect(events.some((event) => event.type === 'connected')).toBe(false)
+    expect(events).toContainEqual({ type: 'disconnected', data: { reason: 'connection-failed' } })
   })
 
-  it('falls back to mock mode when socket closes before connection is established', async () => {
+  it('reports disconnect when socket closes before connection is established', async () => {
     await engine.connect('wss://offline-host', (event) => events.push(event))
     socket.onclose?.()
-    expect(engine.isConnected).toBe(true)
-    expect(events).toContainEqual(expect.objectContaining({ type: 'connected', data: expect.objectContaining({ mock: true }) }))
+    expect(engine.isConnected).toBe(false)
+    expect(events.some((event) => event.type === 'connected')).toBe(false)
+    expect(events).toContainEqual({ type: 'disconnected', data: { reason: 'connection-failed' } })
   })
 
   it('emits error and disconnect events on data channel error and close', async () => {

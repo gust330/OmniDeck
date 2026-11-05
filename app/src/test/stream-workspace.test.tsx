@@ -27,13 +27,14 @@ describe('StreamWorkspace Integration', () => {
     vi.restoreAllMocks()
   })
 
-  it('connects StreamEngine on mount and preserves interactive mock canvas fallback', () => {
+  it('connects StreamEngine on mount and shows an explicit connecting state instead of demo content', () => {
     const connectSpy = vi.spyOn(StreamEngine.prototype, 'connect')
     const { unmount } = render(<StreamWorkspace />)
 
     expect(connectSpy).toHaveBeenCalledWith('wss://192.168.1.100:9090', expect.any(Function))
-    expect(screen.getByText('pipeline_render.rs')).toBeInTheDocument()
-    expect(screen.getByText('Terminal — zsh')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Connecting to TITAN-RIG')
+    expect(screen.queryByText('pipeline_render.rs')).not.toBeInTheDocument()
+    expect(screen.queryByText('Terminal — zsh')).not.toBeInTheDocument()
     expect(screen.queryByTestId('live-stream-video')).not.toBeInTheDocument()
 
     unmount()
@@ -148,7 +149,7 @@ describe('StreamWorkspace Integration', () => {
     expect(screen.getByTestId('live-stream-video')).toBeInTheDocument()
     expect(screen.queryByText('pipeline_render.rs')).not.toBeInTheDocument()
 
-    // Emit disconnected -> falls back to mock canvas
+    // Emit disconnected -> shows an explicit offline state
     act(() => {
       streamCallback?.({
         type: 'disconnected',
@@ -156,17 +157,22 @@ describe('StreamWorkspace Integration', () => {
     })
     expect(useConnectionStore.getState().status).toBe('disconnected')
     expect(screen.queryByTestId('live-stream-video')).not.toBeInTheDocument()
-    expect(screen.getByText('pipeline_render.rs')).toBeInTheDocument()
+    expect(screen.queryByText('pipeline_render.rs')).not.toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Host stream disconnected')
 
     unmount()
   })
 
   it('disconnects and reconnects the stream from workspace controls', () => {
-    useConnectionStore.setState({ status: 'connected' })
-    const connectSpy = vi.spyOn(StreamEngine.prototype, 'connect')
+    let callback: ((event: StreamEvent) => void) | null = null
+    const connectSpy = vi.spyOn(StreamEngine.prototype, 'connect').mockImplementation(async (_url, cb) => {
+      callback = cb
+      return null
+    })
     const disconnectSpy = vi.spyOn(StreamEngine.prototype, 'disconnect')
     render(<StreamWorkspace />)
 
+    act(() => callback?.({ type: 'connected' }))
     fireEvent.click(screen.getByRole('button', { name: 'Disconnect' }))
     expect(disconnectSpy).toHaveBeenCalled()
     expect(useConnectionStore.getState().status).toBe('disconnected')
