@@ -302,8 +302,16 @@ def test_normalized_coordinates_map_to_current_frame_crop(monkeypatch):
         "payload": {"button": 0, "pressed": True, "normalizedX": 0.25, "normalizedY": 0.75},
     })
 
-    assert calls[0] == ("move", {"x": pytest.approx(399.75), "y": pytest.approx(649.25)})
+    assert calls[0] == ("move", {"x": 400, "y": 650})
     assert calls[1] == ("button", {"button": 0, "pressed": True})
+
+
+def test_normalized_coordinates_map_to_integer_pixels_with_clamped_edges():
+    backend = LinuxBackend(cua_driver=Path("/opt/cua-driver"))
+    backend._frame_rect = (100, 50, 1200, 800)
+
+    assert backend._map_coordinates({"normalizedX": 0.25, "normalizedY": 0.75}) == [400, 650]
+    assert backend._map_coordinates({"normalizedX": -1, "normalizedY": 2}) == [100, 849]
 
 
 def test_normalized_coordinates_without_bbox_fallback_to_desktop_dimensions(monkeypatch):
@@ -321,7 +329,7 @@ def test_normalized_coordinates_without_bbox_fallback_to_desktop_dimensions(monk
         "payload": {"normalizedX": 0.5, "normalizedY": 0.5},
     })
 
-    assert calls == [("move", {"x": pytest.approx(959.5), "y": pytest.approx(539.5)})]
+    assert calls == [("move", {"x": 960, "y": 540})]
 
 
 def test_crop_uses_centered_20_by_9_aspect_ratio(monkeypatch):
@@ -330,6 +338,7 @@ def test_crop_uses_centered_20_by_9_aspect_ratio(monkeypatch):
     arr = np.zeros((1080, 2400, 4), dtype=np.uint8)
     backend = LinuxBackend()
     backend.set_crop(True)
+    monkeypatch.setattr(backend, "get_active_window", lambda: {"bbox": None})
     monkeypatch.setattr(backend, "_run_vnc", lambda coro, timeout=15: (coro.close(), arr)[1])
 
     frame = backend.capture_frame()

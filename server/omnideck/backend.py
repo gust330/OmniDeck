@@ -66,7 +66,7 @@ class LinuxBackend:
         self.crop_enabled = False
         self.shell_bridge = shell_bridge or GnomeShellBridge()
         self._active_window = None
-        self._cursor = [0.0, 0.0]
+        self._cursor: list[float] = [0.0, 0.0]
         self._last_frame_at = 0.0
         self._frame_rect = (0, 0, 1920, 1080)
         self._vnc_host = os.environ.get("OMNIDECK_VNC_HOST", "127.0.0.1")
@@ -390,7 +390,7 @@ class LinuxBackend:
             return float(self._vnc_client.video.width), float(self._vnc_client.video.height)
         return float(self._frame_rect[2]), float(self._frame_rect[3])
 
-    def _map_coordinates(self, payload: dict) -> list[float] | None:
+    def _map_coordinates(self, payload: dict) -> list[int] | None:
         normalized_x = payload.get("normalizedX")
         normalized_y = payload.get("normalizedY")
         if normalized_x is None or normalized_y is None:
@@ -398,7 +398,10 @@ class LinuxBackend:
         nx = max(0.0, min(1.0, float(normalized_x)))
         ny = max(0.0, min(1.0, float(normalized_y)))
         x, y, width, height = self._frame_rect
-        return [x + nx * max(0, width - 1), y + ny * max(0, height - 1)]
+        return [
+            x + min(max(0, width - 1), int(nx * width)),
+            y + min(max(0, height - 1), int(ny * height)),
+        ]
 
     def handle_input(self, command: dict):
         kind = command.get("type")
@@ -406,16 +409,16 @@ class LinuxBackend:
         if kind == "mouse-move":
             mapped = self._map_coordinates(payload)
             if mapped is not None:
-                self._cursor = mapped
+                self._cursor = [float(mapped[0]), float(mapped[1])]
             else:
                 width, height = self._get_screen_dimensions()
-                self._cursor[0] = max(0, min(width - 1, self._cursor[0] + float(payload.get("dx", 0))))
-                self._cursor[1] = max(0, min(height - 1, self._cursor[1] + float(payload.get("dy", 0))))
-            self._run_vnc(self._vnc_action("move", {"x": self._cursor[0], "y": self._cursor[1]}))
+                self._cursor[0] = max(0.0, min(width - 1.0, self._cursor[0] + float(payload.get("dx", 0))))
+                self._cursor[1] = max(0.0, min(height - 1.0, self._cursor[1] + float(payload.get("dy", 0))))
+            self._run_vnc(self._vnc_action("move", {"x": int(self._cursor[0]), "y": int(self._cursor[1])}))
         elif kind == "mouse-click":
             mapped = self._map_coordinates(payload)
             if mapped is not None:
-                self._cursor = mapped
+                self._cursor = [float(mapped[0]), float(mapped[1])]
                 self._run_vnc(self._vnc_action("move", {"x": mapped[0], "y": mapped[1]}))
             self._run_vnc(self._vnc_action("button", {
                 "button": int(payload.get("button", 0)), "pressed": bool(payload.get("pressed", True))
